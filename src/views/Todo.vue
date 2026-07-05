@@ -20,9 +20,9 @@
           <div class="todoList" v-if="allFilter">
             <TodoList
               v-for="item in allTodos"
-              :key="item + item.id"
+              :key="item.id"
               :item="item"
-              @cancel-item="cancelEdit"
+              @cancel-edit="cancelEdit"
               @remove-todo="removeTodo"
               @edit-todo="editTodo"
               @done-edit="doneEdit"
@@ -34,12 +34,12 @@
           <div class="todoList" v-if="doneFilter">
             <TodoList
               v-for="item in doneTodos"
-              :key="item + item.id"
+              :key="item.id"
               :item="item"
-              @cancel-item="cancelEdit"
+              @cancel-edit="cancelEdit"
               @remove-todo="removeTodo"
               @edit-todo="editTodo"
-              @done-edit="done - edit"
+              @done-edit="doneEdit"
               @delete-todo="deleteTodos"
               @mark-todo="markTodos"
             ></TodoList>
@@ -48,12 +48,12 @@
           <div class="todoList" v-if="todoFilter">
             <TodoList
               v-for="item in undoneTodos"
-              :key="item + item.id"
+              :key="item.id"
               :item="item"
-              @cancel-item="cancelEdit"
+              @cancel-edit="cancelEdit"
               @remove-todo="removeTodo"
               @edit-todo="editTodo"
-              @done-edit="done - edit"
+              @done-edit="doneEdit"
               @delete-todo="deleteTodos"
               @mark-todo="markTodos"
             ></TodoList>
@@ -104,8 +104,8 @@
                 class="form-control"
                 type="text"
                 v-model="cacheTodoTitle"
-                @keyup.esc="cancelEditComment()"
-                @keyup.enter="doneEditComment(item)"
+                @keyup.esc="cancelEdit()"
+                @keyup.enter="doneEdit()"
               />
             </div>
             <div class="">
@@ -114,14 +114,13 @@
                 class="form-control"
                 type="text"
                 placeholder="Add Comment..."
-                @keyup.esc="cancelAddComment()"
                 @keyup.enter="addComment()"
                 v-model="commentText"
               />
               <div
                 class="comment-list m-2 py-2"
                 v-for="(data, index) in cacheTodo.comments"
-                :key="data.index"
+                :key="index"
                 :class="{ 'border-bottom': index !== cacheTodo.comments.length - 1 }"
               >
                 <div class="d-flex px-3">
@@ -139,7 +138,12 @@
             </div>
           </div>
           <div class="modal-footer justify-content-center">
-            <button type="button" class="btn btn-secondary btn--save" data-dismiss="modal">
+            <button
+              type="button"
+              class="btn btn-secondary btn--save"
+              data-dismiss="modal"
+              @click="doneEdit()"
+            >
               Close & Save
             </button>
           </div>
@@ -149,57 +153,28 @@
   </div>
 </template>
 
-<style lang="scss" scope>
+<style lang="scss">
 @import "@/assets/scss/_todo.scss";
 </style>
 
 <script>
+import moment from "moment";
+import { mapState } from "pinia";
 import TodoList from "@/components/TodoList.vue";
-
-const moment = require("moment");
-
-const STORAGE_KEY = "todos-vuejs"; // 名稱
-const todoStorage = {
-  fetch() {
-    const todos = JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]");
-    todos.forEach((item, index) => {
-      item.id = index;
-    });
-    todoStorage.uid = todos.length;
-    return todos;
-  },
-  save(todos) {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(todos));
-  }
-};
+import { useTodoStore } from "@/stores/todo";
 
 export default {
   name: "Todo",
   components: { TodoList },
+  setup() {
+    const todoStore = useTodoStore();
+    return { todoStore };
+  },
   data() {
     return {
       newTodo: "",
-      todos: [
-        {
-          title: "要買蘿蔔",
-          completed: false,
-          marked: false,
-          messageDate: "05/02/2019 10:00 AM",
-          comments: ["6:00pm", "the new restaurant"]
-        },
-        {
-          title: "冷萃咖啡",
-          completed: true,
-          marked: true,
-          comments: [],
-          messageDate: "03/22/2019 08:23 AM"
-        }
-      ],
       cacheTodo: {},
       cacheTodoTitle: "",
-      cacheTodoMark: "",
-      cacheComment: {},
-      cacheCommentTitle: "",
       commentText: "",
       allFilter: true,
       todoFilter: false,
@@ -208,31 +183,17 @@ export default {
       year: moment().format("YYYY"),
       month: moment().format("MMM"),
       currentWeek: moment().format("ddd"),
-      timeMessage: moment().format("LTS")
+      timeMessage: moment().format("LTS"),
+      clockTimer: null
     };
   },
+  computed: {
+    ...mapState(useTodoStore, ["allTodos", "doneTodos", "undoneTodos", "remaining"])
+  },
   methods: {
-    getTodos() {
-      if (localStorage.getItem("todos-vuejs")) {
-        this.todos = JSON.parse(localStorage.getItem("todos-vuejs"));
-      }
-    },
-    addTodo(e) {
-      // validation check
-      if (this.newTodo) {
-        this.todos.unshift({
-          id: this.todos.length,
-          title: this.newTodo,
-          completed: false,
-          marked: false,
-          comments: [],
-          messageDate: moment().format("L") + " " + moment().format("LT")
-        });
-      }
-      // reset newTodo
+    addTodo() {
+      this.todoStore.addTodo(this.newTodo.trim());
       this.newTodo = "";
-      // save the new item in localstorage
-      return true;
     },
     updateCurrentTime() {
       this.timeMessage = moment().format("LTS");
@@ -254,72 +215,40 @@ export default {
     },
     cancelEdit() {
       this.cacheTodo = {};
+      this.cacheTodoTitle = "";
     },
     removeTodo(item) {
-      const delIndex = this.todos.indexOf(item);
-      this.todos.splice(delIndex, 1);
+      this.todoStore.removeTodo(item);
     },
     editTodo(item) {
-      // console.log(item.title)
       this.cacheTodo = item;
       this.cacheTodoTitle = item.title;
     },
-    doneEdit(item) {
-      item.title = this.cacheTodoTitle;
-      this.cacheTodoTitle = "";
-      this.cacheTodo = {};
+    doneEdit() {
+      if (this.cacheTodo.id !== undefined && this.cacheTodoTitle) {
+        this.todoStore.updateTitle(this.cacheTodo, this.cacheTodoTitle);
+      }
     },
     deleteTodos() {
-      this.todos = [];
-    },
-    completeTodos(item) {
-      this.todos = [];
+      this.todoStore.clearTodos();
     },
     markTodos(item) {
-      this.cacheTodoMark = item.marked;
-      return !this.cacheTodoMark ? (item.marked = true) : (item.marked = false);
+      this.todoStore.toggleMark(item);
     },
     addComment() {
-      if (this.cacheTodo.comments === undefined) {
-        this.cacheTodo.comments.push(this.commentText);
-      }
-      if (this.commentText) {
-        this.cacheTodo.comments.unshift(this.commentText);
-      }
+      this.todoStore.addComment(this.cacheTodo, this.commentText);
       this.commentText = "";
     },
     removeComment(index) {
-      this.cacheTodo.comments.splice(index, 1);
-    }
-  },
-  computed: {
-    allTodos() {
-      return this.todos;
-    },
-    doneTodos() {
-      return this.todos.filter(todo => todo.completed);
-    },
-    undoneTodos() {
-      return this.todos.filter(todo => !todo.completed);
-    },
-    remaining() {
-      return this.todos.filter(item => !item.completed);
-    }
-  },
-  mounted() {
-    this.getTodos();
-  },
-  watch: {
-    todos: {
-      handler(updatedList) {
-        localStorage.setItem("todos-vuejs", JSON.stringify(updatedList));
-      },
-      deep: true
+      this.todoStore.removeComment(this.cacheTodo, index);
     }
   },
   created() {
     this.timeMessage = moment().format("LTS");
-    setInterval(() => this.updateCurrentTime(), 1 * 1000);
+    this.clockTimer = setInterval(() => this.updateCurrentTime(), 1 * 1000);
+  },
+  beforeUnmount() {
+    clearInterval(this.clockTimer);
   }
 };
 </script>

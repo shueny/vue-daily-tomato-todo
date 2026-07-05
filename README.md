@@ -9,3 +9,16 @@ Demo: [Todo List](https://shueny.github.io/vue-todolist-1/)
 
 ## 設計樣式參考
 * [https://yuanchen1103.github.io/f2e-w1/](https://yuanchen1103.github.io/f2e-w1/)
+
+## Tech Stack
+* Vue 3 + Pinia (state management) + Vue Router 4
+* Vite (build tool, with PWA support via `vite-plugin-pwa`)
+* Bootstrap 4 + Font Awesome 6
+
+## Project setup
+```
+npm install
+npm run dev      # start dev server
+npm run build    # production build
+npm run preview  # preview production build
+```

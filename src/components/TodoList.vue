@@ -29,7 +29,7 @@
             {{ item.messageDate }}
           </span>
           <span class="comment-count px-2"
-          v-if="item">
+          v-if="item.comments">
             <b class="icon"><font-awesome-icon :icon="['far','comment-dots']"/></b>
             {{ item.comments.length }}
           </span>
@@ -41,12 +41,7 @@
 export default {
   name: 'TodoList',
   props: ['item'],
-  data () {
-    return {
-      cacheTodo: {},
-      cacheTodoTitle: ''
-    }
-  },
+  emits: ['cancel-edit', 'remove-todo', 'edit-todo', 'done-edit', 'delete-todo', 'mark-todo'],
   methods: {
     cancelEdit (item) {
       this.$emit('cancel-edit', item)
