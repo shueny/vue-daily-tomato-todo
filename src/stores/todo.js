@@ -44,7 +44,6 @@ export const useTodoStore = defineStore('todo', {
     allTodos: (state) => state.todos,
     doneTodos: (state) => state.todos.filter((todo) => todo.completed),
     undoneTodos: (state) => state.todos.filter((todo) => !todo.completed),
-    remaining: (state) => state.todos.filter((todo) => !todo.completed),
     filteredTodos () {
       if (this.filter === 'done') return this.doneTodos
       if (this.filter === 'todo') return this.undoneTodos
@@ -78,9 +77,6 @@ export const useTodoStore = defineStore('todo', {
       if (delIndex !== -1) {
         this.todos.splice(delIndex, 1)
       }
-    },
-    clearTodos () {
-      this.todos = []
     },
     toggleMark (item) {
       item.marked = !item.marked

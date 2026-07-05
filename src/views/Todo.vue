@@ -49,11 +49,8 @@
               v-for="item in filteredTodos"
               :key="item.id"
               :item="item"
-              @cancel-edit="cancelEdit"
               @remove-todo="removeTodo"
               @edit-todo="editTodo"
-              @done-edit="doneEdit"
-              @delete-todo="deleteTodos"
               @mark-todo="markTodos"
             ></TodoList>
           </div>
@@ -264,7 +261,7 @@ export default {
     };
   },
   computed: {
-    ...mapState(useTodoStore, ["filter", "filteredTodos", "remaining", "editingTodo"]),
+    ...mapState(useTodoStore, ["filter", "filteredTodos", "editingTodo"]),
     ...mapState(usePomodoroStore, {
       pomodoroMode: "mode",
       phase: "phase",
@@ -296,9 +293,6 @@ export default {
       if (this.editingTodo && this.cacheTodoTitle) {
         this.todoStore.updateTitle(this.editingTodo, this.cacheTodoTitle);
       }
-    },
-    deleteTodos() {
-      this.todoStore.clearTodos();
     },
     markTodos(item) {
       this.todoStore.toggleMark(item);

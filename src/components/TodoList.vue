@@ -50,7 +50,7 @@ import { usePomodoroStore } from '@/stores/pomodoro'
 export default {
   name: 'TodoList',
   props: ['item'],
-  emits: ['cancel-edit', 'remove-todo', 'edit-todo', 'done-edit', 'delete-todo', 'mark-todo'],
+  emits: ['remove-todo', 'edit-todo', 'mark-todo'],
   setup () {
     const pomodoroStore = usePomodoroStore()
     return { pomodoroStore }
@@ -68,20 +68,11 @@ export default {
         this.pomodoroStore.startFocus(this.item.id)
       }
     },
-    cancelEdit (item) {
-      this.$emit('cancel-edit', item)
-    },
     removeTodo (item) {
       this.$emit('remove-todo', item)
     },
     editTodo (item) {
       this.$emit('edit-todo', item)
-    },
-    doneEdit (item) {
-      this.$emit('done-edit', item)
-    },
-    deleteTodos (item) {
-      this.$emit('delete-todo', item)
     },
     markTodos (item) {
       this.$emit('mark-todo', item)
