@@ -10,6 +10,10 @@
               <span class="checkmark"></span>
             </label>
           </div>
+          <button type="button" class="btn btn-pomodoro mx-1" :class="{'running': isFocusing }"
+          :title="isFocusing ? 'Stop pomodoro' : 'Start pomodoro'" @click="togglePomodoro">
+            <font-awesome-icon :icon="isFocusing ? 'stop' : 'play'"/>
+          </button>
           <button type="button" class="btn btn-default btn-edit mx-1" @click="editTodo(item)"
           data-toggle="modal" data-target="#editModal">
             <font-awesome-icon icon="edit"/>
@@ -33,16 +37,37 @@
             <b class="icon"><font-awesome-icon :icon="['far','comment-dots']"/></b>
             {{ item.comments.length }}
           </span>
+          <span class="tomato-count px-2" v-if="item.tomatoes">
+            🍅 {{ item.tomatoes }}
+          </span>
         </div>
     </div>
   </div>
 </template>
 <script>
+import { usePomodoroStore } from '@/stores/pomodoro'
+
 export default {
   name: 'TodoList',
   props: ['item'],
   emits: ['cancel-edit', 'remove-todo', 'edit-todo', 'done-edit', 'delete-todo', 'mark-todo'],
+  setup () {
+    const pomodoroStore = usePomodoroStore()
+    return { pomodoroStore }
+  },
+  computed: {
+    isFocusing () {
+      return this.pomodoroStore.isRunning && this.pomodoroStore.activeTodoId === this.item.id
+    }
+  },
   methods: {
+    togglePomodoro () {
+      if (this.isFocusing) {
+        this.pomodoroStore.stop()
+      } else {
+        this.pomodoroStore.startFocus(this.item.id)
+      }
+    },
     cancelEdit (item) {
       this.$emit('cancel-edit', item)
     },

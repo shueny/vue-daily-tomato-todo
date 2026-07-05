@@ -14,6 +14,34 @@
         <input placeholder="+ Add task" v-model="newTodo" @keyup.enter="addTodo" />
         <a class="btn btn--add" @click="addTodo">+</a>
       </section>
+      <section class="pomodoro">
+        <div class="pomodoro__modes">
+          <button
+            class="btn pomodoro__mode p-1"
+            :class="{ active: pomodoroMode === '25/5' }"
+            @click="pomodoroStore.setMode('25/5')"
+          >
+            25/5
+          </button>
+          <button
+            class="btn pomodoro__mode p-1"
+            :class="{ active: pomodoroMode === '50/10' }"
+            @click="pomodoroStore.setMode('50/10')"
+          >
+            50/10
+          </button>
+        </div>
+        <div class="pomodoro__status" v-if="isRunning">
+          <span class="pomodoro__phase" :class="`pomodoro__phase--${phase}`">
+            {{ phase === "focus" ? "🍅 專注中" : "☕ 休息中" }}
+          </span>
+          <span class="pomodoro__time">{{ displayTime }}</span>
+          <span class="pomodoro__task" v-if="activeTodo">{{ activeTodo.title }}</span>
+          <button class="btn pomodoro__stop" type="button" @click="pomodoroStore.stop()">
+            <font-awesome-icon icon="stop" />
+          </button>
+        </div>
+      </section>
       <section class="content">
         <div>
           <div class="todoList">
@@ -126,6 +154,85 @@
 
 <style lang="scss">
 @import "@/assets/scss/_todo.scss";
+
+.app-todo .pomodoro {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  padding: 0.75rem 1rem 0 1rem;
+
+  &__modes {
+    display: inline-flex;
+    border: 1px solid #ffcc22;
+    border-radius: 1.5rem;
+    overflow: hidden;
+  }
+
+  &__mode {
+    border-radius: 0;
+    color: #b98f00;
+    font-weight: bold;
+    min-width: 3.5rem;
+
+    &.active {
+      background: #ffcc22;
+      color: #ffffff;
+    }
+  }
+
+  &__status {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-left: auto;
+  }
+
+  &__phase {
+    font-size: 0.85rem;
+
+    &--break {
+      color: #00a916;
+    }
+  }
+
+  &__time {
+    font-size: 1.4rem;
+    font-weight: bold;
+    font-variant-numeric: tabular-nums;
+    color: #4a4a4a;
+  }
+
+  &__task {
+    max-width: 8rem;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: 0.85rem;
+    color: #9b9b9b;
+  }
+
+  &__stop {
+    color: #ff3f3f;
+    opacity: 0.7;
+    padding: 0.25rem 0.5rem;
+
+    &:hover {
+      opacity: 1;
+    }
+  }
+}
+
+.app-todo .list-group-item .btn-pomodoro {
+  &.running {
+    color: #ff3f3f;
+    opacity: 1;
+  }
+}
+
+.app-todo .noteArea .tomato-count {
+  font-size: inherit;
+}
 </style>
 
 <script>
@@ -133,13 +240,15 @@ import moment from "moment";
 import { mapState } from "pinia";
 import TodoList from "@/components/TodoList.vue";
 import { useTodoStore } from "@/stores/todo";
+import { usePomodoroStore } from "@/stores/pomodoro";
 
 export default {
   name: "Todo",
   components: { TodoList },
   setup() {
     const todoStore = useTodoStore();
-    return { todoStore };
+    const pomodoroStore = usePomodoroStore();
+    return { todoStore, pomodoroStore };
   },
   data() {
     return {
@@ -155,7 +264,14 @@ export default {
     };
   },
   computed: {
-    ...mapState(useTodoStore, ["filter", "filteredTodos", "remaining", "editingTodo"])
+    ...mapState(useTodoStore, ["filter", "filteredTodos", "remaining", "editingTodo"]),
+    ...mapState(usePomodoroStore, {
+      pomodoroMode: "mode",
+      phase: "phase",
+      isRunning: "isRunning",
+      displayTime: "displayTime",
+      activeTodo: "activeTodo"
+    })
   },
   methods: {
     addTodo() {

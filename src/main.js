@@ -3,7 +3,7 @@ import { createPinia } from 'pinia'
 import { library } from '@fortawesome/fontawesome-svg-core'
 import {
   faCircle, faMobileAlt, faEnvelope, faEllipsisH, faTrashAlt,
-  faStar, faFileAlt, faCalendarAlt, faEdit
+  faStar, faFileAlt, faCalendarAlt, faEdit, faPlay, faStop
 } from '@fortawesome/free-solid-svg-icons'
 import {
   faCalendarCheck, faCommentDots
@@ -18,7 +18,7 @@ import 'bootstrap/dist/css/bootstrap.min.css' // Import css file
 
 library.add(
   faCalendarCheck, faCommentDots, faCircle, faMobileAlt, faEnvelope, faGithub, faEllipsisH,
-  faTrashAlt, faStar, faFileAlt, faCalendarAlt, faEdit
+  faTrashAlt, faStar, faFileAlt, faCalendarAlt, faEdit, faPlay, faStop
 )
 
 const app = createApp(App)

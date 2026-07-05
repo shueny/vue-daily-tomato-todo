@@ -88,6 +88,12 @@ export const useTodoStore = defineStore('todo', {
     updateTitle (item, title) {
       item.title = title
     },
+    addTomato (id) {
+      const todo = this.todos.find((t) => t.id === id)
+      if (todo) {
+        todo.tomatoes = (todo.tomatoes || 0) + 1
+      }
+    },
     addComment (item, text) {
       if (!item || !text) return
       if (!item.comments) {
