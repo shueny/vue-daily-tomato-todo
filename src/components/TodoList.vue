@@ -40,11 +40,16 @@
           <span class="tomato-count px-2" v-if="item.tomatoes">
             🍅 {{ item.tomatoes }}
           </span>
+          <span class="due-date px-2" :class="{ 'overdue': isOverdue }" v-if="item.dueDate">
+            <b class="icon"><font-awesome-icon icon="calendar-alt"/></b>
+            {{ item.dueDate }}<template v-if="isOverdue"> (逾期)</template>
+          </span>
         </div>
     </div>
   </div>
 </template>
 <script>
+import moment from 'moment'
 import { usePomodoroStore } from '@/stores/pomodoro'
 
 export default {
@@ -58,6 +63,11 @@ export default {
   computed: {
     isFocusing () {
       return this.pomodoroStore.isRunning && this.pomodoroStore.activeTodoId === this.item.id
+    },
+    isOverdue () {
+      // dueDate 為 YYYY-MM-DD,字串比較即為日期比較
+      return !!this.item.dueDate && !this.item.completed &&
+        this.item.dueDate < moment().format('YYYY-MM-DD')
     }
   },
   methods: {

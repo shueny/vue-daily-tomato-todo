@@ -84,6 +84,9 @@ export const useTodoStore = defineStore('todo', {
     updateTitle (item, title) {
       item.title = title
     },
+    setDueDate (item, dueDate) {
+      item.dueDate = dueDate || null
+    },
     addTomato (id) {
       const todo = this.todos.find((t) => t.id === id)
       if (todo) {

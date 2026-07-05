@@ -104,6 +104,10 @@
                 @keyup.enter="doneEdit()"
               />
             </div>
+            <div class="mb-3">
+              <p class="title text-left">Due date:</p>
+              <input class="form-control" type="date" v-model="cacheDueDate" />
+            </div>
             <div class="">
               <p class="title text-left">Comments:</p>
               <input
@@ -230,6 +234,11 @@
 .app-todo .noteArea .tomato-count {
   font-size: inherit;
 }
+
+.app-todo .noteArea .due-date.overdue {
+  color: #ff3f3f;
+  font-weight: bold;
+}
 </style>
 
 <script>
@@ -251,6 +260,7 @@ export default {
     return {
       newTodo: "",
       cacheTodoTitle: "",
+      cacheDueDate: "",
       commentText: "",
       day: moment().format("DD"),
       year: moment().format("YYYY"),
@@ -281,6 +291,7 @@ export default {
     cancelEdit() {
       this.todoStore.stopEdit();
       this.cacheTodoTitle = "";
+      this.cacheDueDate = "";
     },
     removeTodo(item) {
       this.todoStore.removeTodo(item);
@@ -288,11 +299,14 @@ export default {
     editTodo(item) {
       this.todoStore.startEdit(item);
       this.cacheTodoTitle = item.title;
+      this.cacheDueDate = item.dueDate || "";
     },
     doneEdit() {
-      if (this.editingTodo && this.cacheTodoTitle) {
+      if (!this.editingTodo) return;
+      if (this.cacheTodoTitle) {
         this.todoStore.updateTitle(this.editingTodo, this.cacheTodoTitle);
       }
+      this.todoStore.setDueDate(this.editingTodo, this.cacheDueDate);
     },
     markTodos(item) {
       this.todoStore.toggleMark(item);
