@@ -90,9 +90,9 @@
               />
               <div
                 class="comment-list m-2 py-2"
-                v-for="(data, index) in cacheTodo.comments"
+                v-for="(data, index) in editingTodo?.comments"
                 :key="index"
-                :class="{ 'border-bottom': index !== cacheTodo.comments.length - 1 }"
+                :class="{ 'border-bottom': index !== editingTodo.comments.length - 1 }"
               >
                 <div class="d-flex px-3">
                   <span>{{ data }}</span>
@@ -144,7 +144,6 @@ export default {
   data() {
     return {
       newTodo: "",
-      cacheTodo: {},
       cacheTodoTitle: "",
       commentText: "",
       day: moment().format("DD"),
@@ -156,7 +155,7 @@ export default {
     };
   },
   computed: {
-    ...mapState(useTodoStore, ["filter", "filteredTodos", "remaining"])
+    ...mapState(useTodoStore, ["filter", "filteredTodos", "remaining", "editingTodo"])
   },
   methods: {
     addTodo() {
@@ -167,19 +166,19 @@ export default {
       this.timeMessage = moment().format("LTS");
     },
     cancelEdit() {
-      this.cacheTodo = {};
+      this.todoStore.stopEdit();
       this.cacheTodoTitle = "";
     },
     removeTodo(item) {
       this.todoStore.removeTodo(item);
     },
     editTodo(item) {
-      this.cacheTodo = item;
+      this.todoStore.startEdit(item);
       this.cacheTodoTitle = item.title;
     },
     doneEdit() {
-      if (this.cacheTodo.id !== undefined && this.cacheTodoTitle) {
-        this.todoStore.updateTitle(this.cacheTodo, this.cacheTodoTitle);
+      if (this.editingTodo && this.cacheTodoTitle) {
+        this.todoStore.updateTitle(this.editingTodo, this.cacheTodoTitle);
       }
     },
     deleteTodos() {
@@ -189,11 +188,11 @@ export default {
       this.todoStore.toggleMark(item);
     },
     addComment() {
-      this.todoStore.addComment(this.cacheTodo, this.commentText);
+      this.todoStore.addComment(this.editingTodo, this.commentText);
       this.commentText = "";
     },
     removeComment(index) {
-      this.todoStore.removeComment(this.cacheTodo, index);
+      this.todoStore.removeComment(this.editingTodo, index);
     }
   },
   created() {

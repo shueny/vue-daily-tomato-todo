@@ -37,7 +37,8 @@ function loadTodos () {
 export const useTodoStore = defineStore('todo', {
   state: () => ({
     todos: loadTodos(),
-    filter: 'all' // 'all' | 'done' | 'todo'
+    filter: 'all', // 'all' | 'done' | 'todo'
+    editingTodo: null // the todo currently open in the edit modal
   }),
   getters: {
     allTodos: (state) => state.todos,
@@ -53,6 +54,12 @@ export const useTodoStore = defineStore('todo', {
   actions: {
     setFilter (filter) {
       this.filter = filter
+    },
+    startEdit (item) {
+      this.editingTodo = item
+    },
+    stopEdit () {
+      this.editingTodo = null
     },
     addTodo (title) {
       if (!title) return
