@@ -14,47 +14,43 @@
         <input placeholder="+ Add task" v-model="newTodo" @keyup.enter="addTodo" />
         <a class="btn btn--add" @click="addTodo">+</a>
       </section>
+      <section class="pomodoro">
+        <div class="pomodoro__modes">
+          <button
+            class="btn pomodoro__mode p-1"
+            :class="{ active: pomodoroMode === '25/5' }"
+            @click="pomodoroStore.setMode('25/5')"
+          >
+            25/5
+          </button>
+          <button
+            class="btn pomodoro__mode p-1"
+            :class="{ active: pomodoroMode === '50/10' }"
+            @click="pomodoroStore.setMode('50/10')"
+          >
+            50/10
+          </button>
+        </div>
+        <div class="pomodoro__status" v-if="isRunning">
+          <span class="pomodoro__phase" :class="`pomodoro__phase--${phase}`">
+            {{ phase === "focus" ? "🍅 專注中" : "☕ 休息中" }}
+          </span>
+          <span class="pomodoro__time">{{ displayTime }}</span>
+          <span class="pomodoro__task" v-if="activeTodo">{{ activeTodo.title }}</span>
+          <button class="btn pomodoro__stop" type="button" @click="pomodoroStore.stop()">
+            <font-awesome-icon icon="stop" />
+          </button>
+        </div>
+      </section>
       <section class="content">
         <div>
-          <!-- allFilter -->
-          <div class="todoList" v-if="allFilter">
+          <div class="todoList">
             <TodoList
-              v-for="item in allTodos"
-              :key="item + item.id"
+              v-for="item in filteredTodos"
+              :key="item.id"
               :item="item"
-              @cancel-item="cancelEdit"
               @remove-todo="removeTodo"
               @edit-todo="editTodo"
-              @done-edit="doneEdit"
-              @delete-todo="deleteTodos"
-              @mark-todo="markTodos"
-            ></TodoList>
-          </div>
-          <!-- doneFilter -->
-          <div class="todoList" v-if="doneFilter">
-            <TodoList
-              v-for="item in doneTodos"
-              :key="item + item.id"
-              :item="item"
-              @cancel-item="cancelEdit"
-              @remove-todo="removeTodo"
-              @edit-todo="editTodo"
-              @done-edit="done - edit"
-              @delete-todo="deleteTodos"
-              @mark-todo="markTodos"
-            ></TodoList>
-          </div>
-          <!-- todoFilter -->
-          <div class="todoList" v-if="todoFilter">
-            <TodoList
-              v-for="item in undoneTodos"
-              :key="item + item.id"
-              :item="item"
-              @cancel-item="cancelEdit"
-              @remove-todo="removeTodo"
-              @edit-todo="editTodo"
-              @done-edit="done - edit"
-              @delete-todo="deleteTodos"
               @mark-todo="markTodos"
             ></TodoList>
           </div>
@@ -63,22 +59,22 @@
       <div class="filters">
         <button
           class="btn filters__btn filters__btn--all p-2"
-          :class="{ active: allFilter }"
-          @click="sortAll"
+          :class="{ active: filter === 'all' }"
+          @click="todoStore.setFilter('all')"
         >
           All
         </button>
         <button
           class="btn filters__btn filters__btn--complete p-2"
-          :class="{ active: doneFilter }"
-          @click="sortDone"
+          :class="{ active: filter === 'done' }"
+          @click="todoStore.setFilter('done')"
         >
           Complete
         </button>
         <button
           class="btn filters__btn filters__btn--incomplete p-2"
-          :class="{ active: todoFilter }"
-          @click="sortTodo"
+          :class="{ active: filter === 'todo' }"
+          @click="todoStore.setFilter('todo')"
         >
           Incomplete
         </button>
@@ -104,9 +100,13 @@
                 class="form-control"
                 type="text"
                 v-model="cacheTodoTitle"
-                @keyup.esc="cancelEditComment()"
-                @keyup.enter="doneEditComment(item)"
+                @keyup.esc="cancelEdit()"
+                @keyup.enter="doneEdit()"
               />
+            </div>
+            <div class="mb-3">
+              <p class="title text-left">Due date:</p>
+              <input class="form-control" type="date" v-model="cacheDueDate" />
             </div>
             <div class="">
               <p class="title text-left">Comments:</p>
@@ -114,15 +114,14 @@
                 class="form-control"
                 type="text"
                 placeholder="Add Comment..."
-                @keyup.esc="cancelAddComment()"
                 @keyup.enter="addComment()"
                 v-model="commentText"
               />
               <div
                 class="comment-list m-2 py-2"
-                v-for="(data, index) in cacheTodo.comments"
-                :key="data.index"
-                :class="{ 'border-bottom': index !== cacheTodo.comments.length - 1 }"
+                v-for="(data, index) in editingTodo?.comments"
+                :key="index"
+                :class="{ 'border-bottom': index !== editingTodo.comments.length - 1 }"
               >
                 <div class="d-flex px-3">
                   <span>{{ data }}</span>
@@ -139,7 +138,12 @@
             </div>
           </div>
           <div class="modal-footer justify-content-center">
-            <button type="button" class="btn btn-secondary btn--save" data-dismiss="modal">
+            <button
+              type="button"
+              class="btn btn-secondary btn--save"
+              data-dismiss="modal"
+              @click="doneEdit()"
+            >
               Close & Save
             </button>
           </div>
@@ -149,177 +153,178 @@
   </div>
 </template>
 
-<style lang="scss" scope>
+<style lang="scss">
 @import "@/assets/scss/_todo.scss";
+
+.app-todo .pomodoro {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  padding: 0.75rem 1rem 0 1rem;
+
+  &__modes {
+    display: inline-flex;
+    border: 1px solid #ffcc22;
+    border-radius: 1.5rem;
+    overflow: hidden;
+  }
+
+  &__mode {
+    border-radius: 0;
+    color: #b98f00;
+    font-weight: bold;
+    min-width: 3.5rem;
+
+    &.active {
+      background: #ffcc22;
+      color: #ffffff;
+    }
+  }
+
+  &__status {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-left: auto;
+  }
+
+  &__phase {
+    font-size: 0.85rem;
+
+    &--break {
+      color: #00a916;
+    }
+  }
+
+  &__time {
+    font-size: 1.4rem;
+    font-weight: bold;
+    font-variant-numeric: tabular-nums;
+    color: #4a4a4a;
+  }
+
+  &__task {
+    max-width: 8rem;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: 0.85rem;
+    color: #9b9b9b;
+  }
+
+  &__stop {
+    color: #ff3f3f;
+    opacity: 0.7;
+    padding: 0.25rem 0.5rem;
+
+    &:hover {
+      opacity: 1;
+    }
+  }
+}
+
+.app-todo .list-group-item .btn-pomodoro {
+  &.running {
+    color: #ff3f3f;
+    opacity: 1;
+  }
+}
+
+.app-todo .noteArea .tomato-count {
+  font-size: inherit;
+}
+
+.app-todo .noteArea .due-date.overdue {
+  color: #ff3f3f;
+  font-weight: bold;
+}
 </style>
 
 <script>
+import moment from "moment";
+import { mapState } from "pinia";
 import TodoList from "@/components/TodoList.vue";
-
-const moment = require("moment");
-
-const STORAGE_KEY = "todos-vuejs"; // 名稱
-const todoStorage = {
-  fetch() {
-    const todos = JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]");
-    todos.forEach((item, index) => {
-      item.id = index;
-    });
-    todoStorage.uid = todos.length;
-    return todos;
-  },
-  save(todos) {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(todos));
-  }
-};
+import { useTodoStore } from "@/stores/todo";
+import { usePomodoroStore } from "@/stores/pomodoro";
 
 export default {
   name: "Todo",
   components: { TodoList },
+  setup() {
+    const todoStore = useTodoStore();
+    const pomodoroStore = usePomodoroStore();
+    return { todoStore, pomodoroStore };
+  },
   data() {
     return {
       newTodo: "",
-      todos: [
-        {
-          title: "要買蘿蔔",
-          completed: false,
-          marked: false,
-          messageDate: "05/02/2019 10:00 AM",
-          comments: ["6:00pm", "the new restaurant"]
-        },
-        {
-          title: "冷萃咖啡",
-          completed: true,
-          marked: true,
-          comments: [],
-          messageDate: "03/22/2019 08:23 AM"
-        }
-      ],
-      cacheTodo: {},
       cacheTodoTitle: "",
-      cacheTodoMark: "",
-      cacheComment: {},
-      cacheCommentTitle: "",
+      cacheDueDate: "",
       commentText: "",
-      allFilter: true,
-      todoFilter: false,
-      doneFilter: false,
       day: moment().format("DD"),
       year: moment().format("YYYY"),
       month: moment().format("MMM"),
       currentWeek: moment().format("ddd"),
-      timeMessage: moment().format("LTS")
+      timeMessage: moment().format("LTS"),
+      clockTimer: null
     };
   },
+  computed: {
+    ...mapState(useTodoStore, ["filter", "filteredTodos", "editingTodo"]),
+    ...mapState(usePomodoroStore, {
+      pomodoroMode: "mode",
+      phase: "phase",
+      isRunning: "isRunning",
+      displayTime: "displayTime",
+      activeTodo: "activeTodo"
+    })
+  },
   methods: {
-    getTodos() {
-      if (localStorage.getItem("todos-vuejs")) {
-        this.todos = JSON.parse(localStorage.getItem("todos-vuejs"));
-      }
-    },
-    addTodo(e) {
-      // validation check
-      if (this.newTodo) {
-        this.todos.unshift({
-          id: this.todos.length,
-          title: this.newTodo,
-          completed: false,
-          marked: false,
-          comments: [],
-          messageDate: moment().format("L") + " " + moment().format("LT")
-        });
-      }
-      // reset newTodo
+    addTodo() {
+      this.todoStore.addTodo(this.newTodo.trim());
       this.newTodo = "";
-      // save the new item in localstorage
-      return true;
     },
     updateCurrentTime() {
       this.timeMessage = moment().format("LTS");
     },
-    sortAll() {
-      this.allFilter = true;
-      this.todoFilter = false;
-      this.doneFilter = false;
-    },
-    sortTodo() {
-      this.allFilter = false;
-      this.todoFilter = true;
-      this.doneFilter = false;
-    },
-    sortDone() {
-      this.allFilter = false;
-      this.todoFilter = false;
-      this.doneFilter = true;
-    },
     cancelEdit() {
-      this.cacheTodo = {};
+      this.todoStore.stopEdit();
+      this.cacheTodoTitle = "";
+      this.cacheDueDate = "";
     },
     removeTodo(item) {
-      const delIndex = this.todos.indexOf(item);
-      this.todos.splice(delIndex, 1);
+      this.todoStore.removeTodo(item);
     },
     editTodo(item) {
-      // console.log(item.title)
-      this.cacheTodo = item;
+      this.todoStore.startEdit(item);
       this.cacheTodoTitle = item.title;
+      this.cacheDueDate = item.dueDate || "";
     },
-    doneEdit(item) {
-      item.title = this.cacheTodoTitle;
-      this.cacheTodoTitle = "";
-      this.cacheTodo = {};
-    },
-    deleteTodos() {
-      this.todos = [];
-    },
-    completeTodos(item) {
-      this.todos = [];
+    doneEdit() {
+      if (!this.editingTodo) return;
+      if (this.cacheTodoTitle) {
+        this.todoStore.updateTitle(this.editingTodo, this.cacheTodoTitle);
+      }
+      this.todoStore.setDueDate(this.editingTodo, this.cacheDueDate);
     },
     markTodos(item) {
-      this.cacheTodoMark = item.marked;
-      return !this.cacheTodoMark ? (item.marked = true) : (item.marked = false);
+      this.todoStore.toggleMark(item);
     },
     addComment() {
-      if (this.cacheTodo.comments === undefined) {
-        this.cacheTodo.comments.push(this.commentText);
-      }
-      if (this.commentText) {
-        this.cacheTodo.comments.unshift(this.commentText);
-      }
+      this.todoStore.addComment(this.editingTodo, this.commentText);
       this.commentText = "";
     },
     removeComment(index) {
-      this.cacheTodo.comments.splice(index, 1);
-    }
-  },
-  computed: {
-    allTodos() {
-      return this.todos;
-    },
-    doneTodos() {
-      return this.todos.filter(todo => todo.completed);
-    },
-    undoneTodos() {
-      return this.todos.filter(todo => !todo.completed);
-    },
-    remaining() {
-      return this.todos.filter(item => !item.completed);
-    }
-  },
-  mounted() {
-    this.getTodos();
-  },
-  watch: {
-    todos: {
-      handler(updatedList) {
-        localStorage.setItem("todos-vuejs", JSON.stringify(updatedList));
-      },
-      deep: true
+      this.todoStore.removeComment(this.editingTodo, index);
     }
   },
   created() {
     this.timeMessage = moment().format("LTS");
-    setInterval(() => this.updateCurrentTime(), 1 * 1000);
+    this.clockTimer = setInterval(() => this.updateCurrentTime(), 1 * 1000);
+  },
+  beforeUnmount() {
+    clearInterval(this.clockTimer);
   }
 };
 </script>
