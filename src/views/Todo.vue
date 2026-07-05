@@ -16,38 +16,9 @@
       </section>
       <section class="content">
         <div>
-          <!-- allFilter -->
-          <div class="todoList" v-if="allFilter">
+          <div class="todoList">
             <TodoList
-              v-for="item in allTodos"
-              :key="item.id"
-              :item="item"
-              @cancel-edit="cancelEdit"
-              @remove-todo="removeTodo"
-              @edit-todo="editTodo"
-              @done-edit="doneEdit"
-              @delete-todo="deleteTodos"
-              @mark-todo="markTodos"
-            ></TodoList>
-          </div>
-          <!-- doneFilter -->
-          <div class="todoList" v-if="doneFilter">
-            <TodoList
-              v-for="item in doneTodos"
-              :key="item.id"
-              :item="item"
-              @cancel-edit="cancelEdit"
-              @remove-todo="removeTodo"
-              @edit-todo="editTodo"
-              @done-edit="doneEdit"
-              @delete-todo="deleteTodos"
-              @mark-todo="markTodos"
-            ></TodoList>
-          </div>
-          <!-- todoFilter -->
-          <div class="todoList" v-if="todoFilter">
-            <TodoList
-              v-for="item in undoneTodos"
+              v-for="item in filteredTodos"
               :key="item.id"
               :item="item"
               @cancel-edit="cancelEdit"
@@ -63,22 +34,22 @@
       <div class="filters">
         <button
           class="btn filters__btn filters__btn--all p-2"
-          :class="{ active: allFilter }"
-          @click="sortAll"
+          :class="{ active: filter === 'all' }"
+          @click="todoStore.setFilter('all')"
         >
           All
         </button>
         <button
           class="btn filters__btn filters__btn--complete p-2"
-          :class="{ active: doneFilter }"
-          @click="sortDone"
+          :class="{ active: filter === 'done' }"
+          @click="todoStore.setFilter('done')"
         >
           Complete
         </button>
         <button
           class="btn filters__btn filters__btn--incomplete p-2"
-          :class="{ active: todoFilter }"
-          @click="sortTodo"
+          :class="{ active: filter === 'todo' }"
+          @click="todoStore.setFilter('todo')"
         >
           Incomplete
         </button>
@@ -176,9 +147,6 @@ export default {
       cacheTodo: {},
       cacheTodoTitle: "",
       commentText: "",
-      allFilter: true,
-      todoFilter: false,
-      doneFilter: false,
       day: moment().format("DD"),
       year: moment().format("YYYY"),
       month: moment().format("MMM"),
@@ -188,7 +156,7 @@ export default {
     };
   },
   computed: {
-    ...mapState(useTodoStore, ["allTodos", "doneTodos", "undoneTodos", "remaining"])
+    ...mapState(useTodoStore, ["filter", "filteredTodos", "remaining"])
   },
   methods: {
     addTodo() {
@@ -197,21 +165,6 @@ export default {
     },
     updateCurrentTime() {
       this.timeMessage = moment().format("LTS");
-    },
-    sortAll() {
-      this.allFilter = true;
-      this.todoFilter = false;
-      this.doneFilter = false;
-    },
-    sortTodo() {
-      this.allFilter = false;
-      this.todoFilter = true;
-      this.doneFilter = false;
-    },
-    sortDone() {
-      this.allFilter = false;
-      this.todoFilter = false;
-      this.doneFilter = true;
     },
     cancelEdit() {
       this.cacheTodo = {};

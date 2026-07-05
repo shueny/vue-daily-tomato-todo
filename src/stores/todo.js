@@ -36,15 +36,24 @@ function loadTodos () {
 
 export const useTodoStore = defineStore('todo', {
   state: () => ({
-    todos: loadTodos()
+    todos: loadTodos(),
+    filter: 'all' // 'all' | 'done' | 'todo'
   }),
   getters: {
     allTodos: (state) => state.todos,
     doneTodos: (state) => state.todos.filter((todo) => todo.completed),
     undoneTodos: (state) => state.todos.filter((todo) => !todo.completed),
-    remaining: (state) => state.todos.filter((todo) => !todo.completed)
+    remaining: (state) => state.todos.filter((todo) => !todo.completed),
+    filteredTodos () {
+      if (this.filter === 'done') return this.doneTodos
+      if (this.filter === 'todo') return this.undoneTodos
+      return this.allTodos
+    }
   },
   actions: {
+    setFilter (filter) {
+      this.filter = filter
+    },
     addTodo (title) {
       if (!title) return
       const nextId = this.todos.reduce((max, todo) => Math.max(max, todo.id || 0), -1) + 1
