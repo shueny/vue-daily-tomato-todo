@@ -13,6 +13,7 @@ import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
 import App from './App.vue'
 import router from './router'
 import { useTodoStore, STORAGE_KEY } from './stores/todo'
+import { usePomodoroStore } from './stores/pomodoro'
 import 'bootstrap' // Import js file
 import 'bootstrap/dist/css/bootstrap.min.css' // Import css file
 
@@ -33,5 +34,9 @@ const todoStore = useTodoStore(pinia)
 todoStore.$subscribe((mutation, state) => {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(state.todos))
 })
+
+// resume an in-progress pomodoro from localStorage (after the todo
+// subscription above, so a tomato awarded during restore gets persisted)
+usePomodoroStore(pinia).restoreSession()
 
 app.mount('#app')
