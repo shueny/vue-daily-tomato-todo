@@ -1,4 +1,5 @@
 <template>
+  <transition name="fo-fade">
   <div class="focus-overlay" v-if="isRunning" :class="'is-' + phase" role="dialog" aria-label="專注中">
     <div class="fo-phase">{{ phase === 'focus' ? '🍅 FOCUS' : '☕ BREAK' }}</div>
     <div class="fo-ringwrap">
@@ -25,6 +26,7 @@
     </div>
     <div class="fo-hint">{{ phase === 'break' ? '■ 跳過休息' : '■ 放棄這顆蕃茄' }}</div>
   </div>
+  </transition>
 </template>
 
 <script>
