@@ -1,5 +1,5 @@
-# [Vue] Todo List
-Demo: [Todo List](https://shueny.github.io/vue-todolist-1/)
+# [Vue] Daily Tomato Todo
+Demo: [Daily Tomato Todo](https://shueny.github.io/vue-daily-tomato-todo/)
 <img src="/src/assets/vue-todo-1.jpg" alt="todo list" width="50%" />
 
 ## 來源
