@@ -1,6 +1,13 @@
 # [Vue] Daily Tomato Todo
 Demo: [Daily Tomato Todo](https://shueny.github.io/vue-daily-tomato-todo/)
-<img src="/src/assets/vue-todo-1.jpg" alt="todo list" width="50%" />
+
+<p>
+  <img src="/src/assets/screenshot-main.png" alt="每日卡片主畫面" width="30%" />
+  <img src="/src/assets/screenshot-calendar.png" alt="行事曆與逾期任務" width="30%" />
+  <img src="/src/assets/screenshot-focus.png" alt="全畫面專注模式" width="30%" />
+</p>
+
+設計概念(互動 mockup 與功能決策)請見 [docs/design-concept.html](docs/design-concept.html)。
 
 ## 來源
 * [The F2E - 前端修練精神時光屋](https://www.hexschool.com/2018/05/09/2018-05-09-the_f2e/)
