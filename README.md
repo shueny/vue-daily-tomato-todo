@@ -2,8 +2,8 @@
 
 以「日」為單位的待辦清單 × 蕃茄鐘。一天一張卡片,左右滑動安排每日任務;選定一件事按下 ▶,整個畫面只剩倒數計時,專心把它做完。
 
-**線上 Demo** → https://shueny.github.io/vue-daily-tomato-todo/
-**設計概念(互動 mockup 與功能決策)** → [docs/design-concept.html](docs/design-concept.html)
+- **線上 Demo** → https://shueny.github.io/vue-daily-tomato-todo/
+- **設計概念(互動 mockup 與功能決策)** → [docs/design-concept.html](docs/design-concept.html)
 
 <p>
   <img src="/src/assets/screenshot-main.png" alt="每日卡片主畫面" width="30%" />
