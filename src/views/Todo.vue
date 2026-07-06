@@ -20,7 +20,9 @@
         </div>
       </section>
 
-      <CalendarPanel v-if="calOpen" @select="onCalSelect" />
+      <transition name="cal-slide">
+        <CalendarPanel v-if="calOpen" @select="onCalSelect" />
+      </transition>
 
       <section class="addTask">
         <input placeholder="+ Add task" v-model="newTodo" @keyup.enter="addTodo" />
@@ -28,6 +30,7 @@
           📅 {{ chipLabel }}
         </button>
         <a class="btn btn--add" @click="addTodo">+</a>
+        <transition name="pop">
         <div class="date-pop" v-if="popOpen" @click.stop>
           <button type="button" @click="quickPick(0)">今天</button>
           <button type="button" @click="quickPick(1)">明天</button>
@@ -37,6 +40,7 @@
             <input type="date" v-model="newTodoDate" @change="popOpen = false" />
           </label>
         </div>
+        </transition>
       </section>
 
       <section class="pomodoro">
@@ -92,7 +96,7 @@
             >
               ⚠ 有 {{ overdueTodos.length }} 件過去未完成 — 查看
             </button>
-            <div class="todoList" v-if="listFor(d).length">
+            <transition-group name="todo-anim" tag="div" class="todoList" v-if="listFor(d).length">
               <TodoList
                 v-for="item in listFor(d)"
                 :key="item.id"
@@ -101,7 +105,7 @@
                 @edit-todo="editTodo"
                 @mark-todo="markTodos"
               ></TodoList>
-            </div>
+            </transition-group>
             <div class="day-card__empty" v-else>
               <b>🌤</b>
               這天沒有任務<br />在上方輸入框直接新增
@@ -393,65 +397,89 @@
   }
 }
 
-/* ── 蕃茄鐘模式列 ── */
-.app-todo .pomodoro {
+/* ── 蕃茄鐘模式列 ──
+   選擇器都掛在 .container 底下,壓過 _todo.scss 的 .container .btn 全域樣式 */
+.app-todo .container .pomodoro {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
-  padding: 0.75rem 1rem 0 1rem;
+  gap: 8px;
+  padding: 14px 16px 0;
 
-  &__modes {
+  .pomodoro__modes {
     display: inline-flex;
-    border: 1px solid #ffcc22;
+    border: 1.5px solid #ffcc22;
     border-radius: 1.5rem;
     overflow: hidden;
   }
-  &__mode {
+  .btn.pomodoro__mode {
     border-radius: 0;
     color: #b98f00;
     font-weight: bold;
-    min-width: 3.5rem;
+    font-size: 13px;
+    line-height: 1.4;
+    min-width: 52px;
 
     &.active {
       background: #ffcc22;
       color: #ffffff;
     }
+    &:hover {
+      background: #fff3cc;
+      color: #b98f00;
+    }
+    &.active:hover {
+      background: #ffcc22;
+      color: #fff;
+    }
   }
-  &__hint {
+  .pomodoro__hint {
     margin-left: auto;
-    font-size: 0.7rem;
+    font-size: 11px;
     color: #9d9689;
   }
 }
 
 /* ── 日子膠囊列 ── */
-.app-todo .daynav {
+.app-todo .container .daynav {
   display: flex;
   align-items: center;
-  gap: 6px;
-  padding: 10px 16px 0;
+  gap: 8px;
+  padding: 12px 16px 0;
 
-  &__pill {
-    font-size: 0.74rem;
-    font-weight: 800;
+  .btn.daynav__pill {
+    font-size: 12px;
+    font-weight: bold;
+    line-height: 1.5;
     border: 1.5px solid #ede7d8;
     color: #9d9689;
     border-radius: 2rem;
-    padding: 3px 12px;
+    padding: 3px 14px;
+    transition: background 0.2s, color 0.2s;
 
     &.active {
       background: #ffcc22;
       border-color: #ffcc22;
       color: #fff;
     }
+    &:hover:not(.active) {
+      background: #fff8e2;
+      color: #b98f00;
+    }
   }
-  &__today {
+  .btn.daynav__today {
     margin-left: auto;
-    font-size: 0.72rem;
-    font-weight: 800;
+    font-size: 11px;
+    font-weight: bold;
+    line-height: 1.5;
     color: #b98f00;
     border: 0;
     background: none;
+    padding: 3px 6px;
+
+    &:hover {
+      background: #fff3cc;
+      color: #b98f00;
+    }
   }
 }
 
@@ -474,16 +502,16 @@
   padding-bottom: 6px;
 
   &__label {
-    font-size: 0.76rem;
+    font-size: 12px;
     color: #9d9689;
-    font-weight: 800;
+    font-weight: bold;
     letter-spacing: 0.06em;
     text-align: left;
-    margin: 10px 16px 0;
+    margin: 12px 16px 2px;
   }
   &__empty {
     color: #9d9689;
-    font-size: 0.82rem;
+    font-size: 13px;
     text-align: center;
     padding: 52px 0;
 
@@ -500,14 +528,74 @@
   margin: 8px 16px 0;
   text-align: left;
   font: inherit;
-  font-size: 0.76rem;
-  font-weight: 700;
+  font-size: 12px;
+  font-weight: bold;
   color: #d63030;
   background: rgba(255, 63, 63, 0.09);
   border: 0;
   border-radius: 10px;
   padding: 7px 11px;
   cursor: pointer;
+}
+
+/* ── 動畫 ── */
+/* 清單項目:進場彈跳、離場滑出、重排平移(參考 nourabusoud/vue-todo-list) */
+.todo-anim-enter-active {
+  animation: todo-in 0.4s cubic-bezier(0.2, 0.8, 0.3, 1.1);
+}
+.todo-anim-leave-active {
+  transition: all 0.3s ease;
+}
+.todo-anim-leave-to {
+  opacity: 0;
+  transform: translateX(48px);
+}
+.todo-anim-move {
+  transition: transform 0.3s ease;
+}
+@keyframes todo-in {
+  0% {
+    opacity: 0;
+    transform: translateY(-16px) scale(0.96);
+  }
+  60% {
+    opacity: 1;
+    transform: translateY(3px) scale(1.01);
+  }
+  100% {
+    opacity: 1;
+    transform: none;
+  }
+}
+/* 行事曆展開/收合 */
+.cal-slide-enter-active,
+.cal-slide-leave-active {
+  transition: opacity 0.22s ease, transform 0.22s ease;
+  transform-origin: top;
+}
+.cal-slide-enter-from,
+.cal-slide-leave-to {
+  opacity: 0;
+  transform: translateY(-10px) scaleY(0.96);
+}
+/* 日期快選浮層 */
+.pop-enter-active,
+.pop-leave-active {
+  transition: opacity 0.15s ease, transform 0.15s ease;
+}
+.pop-enter-from,
+.pop-leave-to {
+  opacity: 0;
+  transform: translateY(-5px) scale(0.97);
+}
+/* 專注遮罩淡入淡出 */
+.fo-fade-enter-active,
+.fo-fade-leave-active {
+  transition: opacity 0.28s ease;
+}
+.fo-fade-enter-from,
+.fo-fade-leave-to {
+  opacity: 0;
 }
 
 /* ── 逾期任務的移動快速鍵 ── */
@@ -654,8 +742,20 @@
 }
 @media (prefers-reduced-motion: reduce) {
   .focus-overlay .fo-ring-fg,
-  .app-todo .header-toggle .caret {
+  .app-todo .header-toggle .caret,
+  .todo-anim-leave-active,
+  .todo-anim-move,
+  .cal-slide-enter-active,
+  .cal-slide-leave-active,
+  .pop-enter-active,
+  .pop-leave-active,
+  .fo-fade-enter-active,
+  .fo-fade-leave-active {
     transition: none;
+    animation: none;
+  }
+  .todo-anim-enter-active {
+    animation: none;
   }
 }
 </style>

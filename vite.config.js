@@ -4,7 +4,7 @@ import vue from '@vitejs/plugin-vue'
 import { VitePWA } from 'vite-plugin-pwa'
 
 export default defineConfig({
-  base: '/vue-todolist-1/',
+  base: '/vue-daily-tomato-todo/',
   plugins: [
     vue(),
     VitePWA({
