@@ -1,0 +1,607 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Daily Tomato Todo — 設計概念</title>
+</head>
+<body>
+<style>
+  :root{
+    --mango:#FFCC22;
+    --mango-deep:#DFA900;
+    --mango-soft:#FFF3CC;
+    --ink:#4a4a4a;
+    --ink-soft:#9d9689;
+    --ground:#F7F4EC;
+    --card:#FFFFFF;
+    --line:#EDE7D8;
+    --red:#FF3F3F;
+    --green:#00A916;
+    --shadow:0 10px 30px rgba(120,95,10,.14);
+  }
+  @media (prefers-color-scheme: dark){
+    :root{
+      --mango:#FFCC22;
+      --mango-deep:#FFD84D;
+      --mango-soft:#3A3211;
+      --ink:#F0EAD8;
+      --ink-soft:#A69D87;
+      --ground:#1D1A12;
+      --card:#292418;
+      --line:#3A3424;
+      --red:#FF6B6B;
+      --green:#4CC964;
+      --shadow:0 10px 30px rgba(0,0,0,.5);
+    }
+  }
+  :root[data-theme="dark"]{
+    --mango:#FFCC22; --mango-deep:#FFD84D; --mango-soft:#3A3211;
+    --ink:#F0EAD8; --ink-soft:#A69D87;
+    --ground:#1D1A12; --card:#292418; --line:#3A3424;
+    --red:#FF6B6B; --green:#4CC964; --shadow:0 10px 30px rgba(0,0,0,.5);
+  }
+  :root[data-theme="light"]{
+    --mango:#FFCC22; --mango-deep:#DFA900; --mango-soft:#FFF3CC;
+    --ink:#4a4a4a; --ink-soft:#9d9689;
+    --ground:#F7F4EC; --card:#FFFFFF; --line:#EDE7D8;
+    --red:#FF3F3F; --green:#00A916; --shadow:0 10px 30px rgba(120,95,10,.14);
+  }
+
+  *{box-sizing:border-box}
+  body{
+    background:var(--ground);
+    color:var(--ink);
+    font-family:"Nunito","Noto Sans TC",system-ui,-apple-system,"PingFang TC","Microsoft JhengHei",sans-serif;
+    margin:0; padding:2.5rem 1rem 4rem;
+    line-height:1.6;
+  }
+  .wrap{max-width:960px;margin:0 auto}
+
+  header.intro{max-width:640px;margin:0 auto 2rem;text-align:center}
+  .eyebrow{
+    display:inline-block;font-size:.72rem;letter-spacing:.18em;
+    color:var(--mango-deep);font-weight:800;text-transform:uppercase;
+    border:1.5px solid var(--mango);border-radius:2rem;padding:.2rem .9rem;margin-bottom:.9rem;
+  }
+  h1{font-size:1.7rem;margin:.1rem 0 .4rem;text-wrap:balance;font-weight:800}
+  .lede{color:var(--ink-soft);font-size:.95rem;margin:0}
+
+  /* ── layout: phone + notes ── */
+  .stage{display:flex;flex-wrap:wrap;gap:2.2rem;justify-content:center;align-items:flex-start}
+  .notes{flex:1 1 320px;max-width:430px;display:flex;flex-direction:column;gap:1rem}
+
+  /* ── phone frame ── */
+  .phone{
+    flex:0 0 auto;width:375px;max-width:100%;
+    background:var(--card);border-radius:26px;box-shadow:var(--shadow);
+    overflow:hidden;border:1px solid var(--line);
+    user-select:none;position:relative;
+  }
+
+  /* ── focus overlay(專注遮罩)── */
+  .focus{
+    position:absolute;inset:0;z-index:50;display:none;
+    flex-direction:column;align-items:center;justify-content:center;gap:1.1rem;
+    background:rgba(60,58,52,.55);
+    -webkit-backdrop-filter:blur(10px) saturate(.85);
+    backdrop-filter:blur(10px) saturate(.85);
+    color:#fff;text-align:center;padding:2rem 1.5rem;
+  }
+  @supports not (backdrop-filter: blur(1px)){
+    .focus{background:rgba(55,53,48,.85)} /* 不支援模糊時提高不透明度保持可讀 */
+  }
+  .focus.show{display:flex}
+  .focus .phase{font-size:.8rem;font-weight:800;letter-spacing:.25em;color:#FFCC22;text-transform:uppercase;text-shadow:0 1px 3px rgba(0,0,0,.35)}
+  .focus .ringwrap{position:relative;width:210px;height:210px}
+  .focus svg{transform:rotate(-90deg)}
+  .focus .ring-bg{stroke:rgba(255,255,255,.25)}
+  .focus .ring-fg{stroke:#FFCC22;transition:stroke-dashoffset 1s linear;filter:drop-shadow(0 1px 3px rgba(0,0,0,.3))}
+  @media (prefers-reduced-motion: reduce){ .focus .ring-fg{transition:none} }
+  .focus .t{
+    position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
+    font-size:2.9rem;font-weight:800;font-variant-numeric:tabular-nums;color:#fff;
+    text-shadow:0 2px 8px rgba(0,0,0,.45);
+  }
+  .focus .task{font-size:1rem;font-weight:700;color:#fff;max-width:260px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;text-shadow:0 1px 4px rgba(0,0,0,.4)}
+  .focus .paused-tag{font-size:.72rem;color:rgba(255,255,255,.75);visibility:hidden}
+  .focus .paused-tag.show{visibility:visible}
+  .focus .ctrl{display:flex;gap:1.4rem;margin-top:.4rem}
+  .focus .ctrl button{
+    width:56px;height:56px;border-radius:50%;font-size:1.25rem;cursor:pointer;font-family:inherit;
+    display:flex;align-items:center;justify-content:center;
+    box-shadow:0 3px 10px rgba(0,0,0,.25);
+  }
+  .focus .btn-toggle{background:#FFCC22;border:0;color:#3d3012}
+  .focus .btn-stop{background:rgba(255,255,255,.85);border:2px solid #FF6B6B;color:#FF3F3F}
+  .focus .ctrl button:focus-visible{outline:2px solid #fff;outline-offset:3px}
+
+  /* header (existing visual language) */
+  .app-head{background:var(--mango);padding:16px 18px 14px;color:#4a4a1e;position:relative}
+  .date-row{display:flex;align-items:flex-start;gap:8px;cursor:pointer;-webkit-tap-highlight-color:transparent}
+  .date-row .big{font-size:2.1rem;font-weight:800;line-height:1;color:#453d10}
+  .date-row .ym{font-size:.7rem;font-weight:700;line-height:1.25;color:#5c5316;padding-top:2px}
+  .date-row .caret{font-size:.7rem;color:#5c5316;padding-top:8px;transition:transform .25s}
+  .date-row.open .caret{transform:rotate(180deg)}
+  .date-row .wk{margin-left:auto;font-size:1.35rem;font-weight:700;color:#453d10}
+  .hint-cal{font-size:.68rem;color:#6b6120;margin-top:2px}
+
+  /* add bar with date chip */
+  .addbar{display:flex;align-items:center;background:#fff;border-radius:2rem;margin-top:12px;padding:6px 6px 6px 16px;gap:8px;box-shadow:0 2px 6px rgba(90,70,0,.12)}
+  :root[data-theme="dark"] .addbar{background:#3a3424}
+  @media (prefers-color-scheme: dark){ .addbar{background:#3a3424} }
+  :root[data-theme="light"] .addbar{background:#fff}
+  .addbar input{border:0;outline:0;flex:1;font:inherit;font-size:.9rem;color:var(--ink);background:transparent;min-width:0}
+  .addbar input::placeholder{color:var(--ink-soft)}
+  .chip-date{
+    display:flex;align-items:center;gap:4px;flex:0 0 auto;
+    background:var(--mango-soft);color:var(--mango-deep);
+    font-size:.74rem;font-weight:800;border:0;border-radius:2rem;padding:6px 11px;cursor:pointer;font-family:inherit;
+  }
+  .chip-date:focus-visible,.date-row:focus-visible{outline:2px solid #453d10;outline-offset:2px}
+  .btn-plus{flex:0 0 34px;height:34px;border-radius:50%;background:var(--mango);border:2px solid #fff;color:#fff;font-size:1.25rem;line-height:1;font-weight:700;cursor:pointer}
+  @media (prefers-color-scheme: dark){ .btn-plus{border-color:#292418} }
+  :root[data-theme="dark"] .btn-plus{border-color:#292418}
+  :root[data-theme="light"] .btn-plus{border-color:#fff}
+
+  /* date popover */
+  .pop{
+    position:absolute;right:14px;top:108px;z-index:30;
+    background:var(--card);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow);
+    padding:8px;display:none;flex-direction:column;gap:2px;width:170px;
+  }
+  .pop.show{display:flex}
+  .pop button{
+    font:inherit;font-size:.85rem;text-align:left;border:0;background:none;color:var(--ink);
+    padding:8px 10px;border-radius:8px;cursor:pointer;
+  }
+  .pop button:hover{background:var(--mango-soft)}
+  .pop .sep{height:1px;background:var(--line);margin:4px 6px}
+  .pop label{font-size:.72rem;color:var(--ink-soft);padding:2px 10px 6px;display:block}
+
+  /* calendar panel */
+  .cal{
+    max-height:0;overflow:hidden;transition:max-height .3s ease;
+    background:var(--mango);
+  }
+  .cal.open{max-height:320px}
+  .cal-inner{padding:4px 14px 14px}
+  .cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:2px;text-align:center}
+  .cal-grid .dow{font-size:.62rem;font-weight:800;color:#6b6120;padding:4px 0}
+  .cal-cell{
+    position:relative;border:0;background:none;font:inherit;font-size:.8rem;font-weight:700;color:#574d14;
+    padding:7px 0 11px;border-radius:10px;cursor:pointer;
+  }
+  .cal-cell:hover{background:rgba(255,255,255,.35)}
+  .cal-cell.dim{opacity:.55}
+  .cal-cell.today{outline:2px solid #fff;outline-offset:-2px}
+  .cal-cell.sel{background:#fff;color:var(--mango-deep)}
+  .cal-cell .dots{position:absolute;left:0;right:0;bottom:4px;display:flex;gap:3px;justify-content:center}
+  .cal-cell .dot{width:4.5px;height:4.5px;border-radius:50%;background:#8a7a1e}
+  .cal-cell .dot.red{background:var(--red)}
+  .cal-cell .dot.grn{background:#1b7d2c}
+  .cal-cell.sel .dot{background:var(--mango-deep)}
+
+  /* day pills + carousel */
+  .body-area{background:var(--card)}
+
+  /* pomodoro global bar */
+  .pomo{display:flex;align-items:center;gap:8px;padding:12px 14px 0}
+  .pomo-modes{display:inline-flex;border:1.5px solid var(--mango);border-radius:2rem;overflow:hidden}
+  .pomo .pm{font:inherit;font-size:.74rem;font-weight:800;border:0;background:none;color:var(--mango-deep);padding:4px 12px;cursor:pointer}
+  .pomo .pm.on{background:var(--mango);color:#fff}
+  .pomo-idle{font-size:.7rem;color:var(--ink-soft);margin-left:auto}
+  .pomo-run{
+    display:none;align-items:center;gap:6px;margin-left:auto;cursor:pointer;
+    font:inherit;font-size:.78rem;font-weight:700;color:var(--ink);
+    background:var(--mango-soft);border:0;border-radius:2rem;padding:5px 12px;
+  }
+  .pomo-run b{font-size:.95rem;font-variant-numeric:tabular-nums;color:var(--ink)}
+  .pomo-run span{max-width:90px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--ink-soft)}
+  .pomo-stop{display:none;font:inherit;border:0;background:none;color:var(--red);font-size:.9rem;cursor:pointer;opacity:.8;padding:2px 4px}
+  .pomo.running .pomo-idle{display:none}
+  .pomo.running .pomo-run{display:inline-flex}
+  .pomo.running .pomo-stop{display:inline}
+  .todo .a-play{font:inherit;border:0;background:none;cursor:pointer;color:var(--ink-soft);font-size:.8rem;padding:0}
+  .todo .a-play.running{color:var(--red)}
+  .daynav{display:flex;align-items:center;gap:6px;padding:12px 14px 2px}
+  .daynav .pill{
+    font:inherit;font-size:.74rem;font-weight:800;border:1.5px solid var(--line);
+    background:none;color:var(--ink-soft);border-radius:2rem;padding:4px 12px;cursor:pointer;
+  }
+  .daynav .pill.on{background:var(--mango);border-color:var(--mango);color:#fff}
+  .daynav .today-btn{margin-left:auto;font-size:.72rem;font-weight:800;color:var(--mango-deep);background:none;border:0;cursor:pointer;font-family:inherit;visibility:hidden}
+  .daynav .today-btn.show{visibility:visible}
+
+  .rail{
+    display:flex;overflow-x:auto;scroll-snap-type:x mandatory;
+    scrollbar-width:none;
+  }
+  .rail::-webkit-scrollbar{display:none}
+  .card-day{
+    flex:0 0 100%;scroll-snap-align:center;
+    padding:10px 16px 18px;min-height:275px;
+  }
+  .card-day h3{font-size:.78rem;color:var(--ink-soft);font-weight:800;margin:.2rem 0 .6rem;letter-spacing:.06em}
+  .rollover{
+    display:flex;align-items:center;gap:6px;font-size:.74rem;font-weight:700;color:var(--red);
+    background:color-mix(in srgb, var(--red) 9%, transparent);
+    border-radius:10px;padding:7px 11px;margin-bottom:10px;cursor:pointer;
+  }
+  .todo{display:flex;align-items:flex-start;gap:10px;padding:9px 0;border-bottom:1px solid var(--line)}
+  .todo:last-child{border-bottom:0}
+  .box{flex:0 0 20px;height:20px;border-radius:6px;background:var(--line);margin-top:2px;position:relative;cursor:pointer}
+  .todo.done .box{background:var(--mango)}
+  .todo.done .box::after{content:"";position:absolute;left:6px;top:2.5px;width:6px;height:10px;border:solid #fff;border-width:0 2.5px 2.5px 0;transform:rotate(45deg)}
+  .todo .tx{flex:1;min-width:0}
+  .todo .tt{font-size:.9rem;font-weight:700}
+  .todo.done .tt{text-decoration:line-through;color:var(--ink-soft)}
+  .todo .meta{font-size:.7rem;color:var(--ink-soft);display:flex;gap:10px;flex-wrap:wrap}
+  .todo .meta .late{color:var(--red);font-weight:800}
+  .todo .acts{display:flex;gap:8px;color:var(--ink-soft);font-size:.8rem;opacity:.75;padding-top:3px}
+  .todo .acts .star{color:var(--mango)}
+  .empty{color:var(--ink-soft);font-size:.82rem;text-align:center;padding:56px 0}
+  .empty b{display:block;font-size:1.6rem;margin-bottom:6px}
+
+  .page-dots{display:flex;gap:5px;justify-content:center;padding:2px 0 14px}
+  .page-dots i{width:5.5px;height:5.5px;border-radius:50%;background:var(--line)}
+  .page-dots i.on{background:var(--mango);width:16px;border-radius:3px}
+  .swipe-hint{text-align:center;font-size:.7rem;color:var(--ink-soft);padding-bottom:14px}
+
+  /* ── annotation notes ── */
+  .note{
+    background:var(--card);border:1px solid var(--line);border-radius:16px;padding:1.05rem 1.2rem;
+  }
+  .note .n{
+    display:inline-flex;width:22px;height:22px;border-radius:50%;background:var(--mango);color:#fff;
+    font-size:.75rem;font-weight:800;align-items:center;justify-content:center;margin-right:.5rem;vertical-align:-3px;
+  }
+  .note h2{font-size:.98rem;margin:0 0 .45rem;font-weight:800}
+  .note p{font-size:.84rem;color:var(--ink);margin:.3rem 0}
+  .note ul{margin:.35rem 0 0;padding-left:1.1rem;font-size:.84rem}
+  .note li{margin:.28rem 0}
+  .note .muted{color:var(--ink-soft)}
+  .note code{background:var(--mango-soft);color:var(--mango-deep);padding:.05rem .35rem;border-radius:5px;font-size:.78rem;font-weight:700}
+
+  .qa{border-left:3px solid var(--mango);padding-left:1rem}
+  .qa h2{font-size:.98rem;margin:0 0 .4rem}
+  .qa ol{margin:.3rem 0 0;padding-left:1.1rem;font-size:.84rem}
+  .qa li{margin:.45rem 0}
+
+  @media (prefers-reduced-motion: reduce){
+    .cal,.date-row .caret{transition:none}
+    .rail{scroll-behavior:auto !important}
+  }
+</style>
+
+<header class="intro">
+  <span class="eyebrow">Design Concept · Case Study</span>
+  <h1>Daily Tomato Todo — 設計概念</h1>
+  <p class="lede">Vue 3 + Pinia 待辦事項 App 的功能設計:每日卡片、行事曆、建立時選日期、全畫面蕃茄鐘。下面的手機畫面可以直接操作。<br><a href="https://shueny.github.io/vue-daily-tomato-todo/" style="color:var(--mango-deep);font-weight:800">線上 Demo</a> · <a href="https://github.com/shueny/vue-daily-tomato-todo" style="color:var(--mango-deep);font-weight:800">GitHub Repo</a></p>
+</header>
+
+<div class="wrap">
+<div class="stage">
+
+  <!-- ══ interactive phone mockup ══ -->
+  <div class="phone" id="phone">
+    <div class="app-head">
+      <div class="date-row" id="dateRow" role="button" tabindex="0" aria-expanded="false" aria-label="展開行事曆">
+        <span class="big" id="hBig">06</span>
+        <span class="ym"><b id="hY">2026</b><br><span id="hM">Jul</span></span>
+        <span class="caret">▼</span>
+        <span class="wk" id="hWk">Mon</span>
+      </div>
+      <div class="hint-cal">點日期展開行事曆 📅</div>
+
+      <div class="addbar">
+        <input placeholder="+ Add task" aria-label="新增任務">
+        <button class="chip-date" id="chipDate" aria-haspopup="true">📅 <span id="chipTxt">今天</span></button>
+        <button class="btn-plus" aria-label="新增">+</button>
+      </div>
+
+      <div class="pop" id="pop">
+        <button data-q="today">今天</button>
+        <button data-q="tomorrow">明天</button>
+        <button data-q="nextweek">下週一</button>
+        <div class="sep"></div>
+        <label>或直接選日期…<br><input type="date" value="2026-07-06" style="font:inherit;font-size:.8rem;margin-top:2px;border:1px solid var(--line);border-radius:6px;padding:2px 6px;background:var(--card);color:var(--ink)"></label>
+      </div>
+    </div>
+
+    <!-- collapsible calendar -->
+    <div class="cal" id="cal">
+      <div class="cal-inner">
+        <div class="cal-grid" id="calGrid"></div>
+      </div>
+    </div>
+
+    <div class="body-area">
+      <!-- 蕃茄鐘:待機時只有模式切換;開始後由全畫面專注遮罩接管 -->
+      <div class="pomo" id="pomo">
+        <div class="pomo-modes">
+          <button class="pm on" data-m="25">25/5</button>
+          <button class="pm" data-m="50">50/10</button>
+        </div>
+        <div class="pomo-idle" id="pomoIdle">按任務列的 ▶ 開始專注</div>
+      </div>
+
+      <div class="daynav" id="dayNav">
+        <button class="pill" data-i="1">昨天</button>
+        <button class="pill on" data-i="2">今天</button>
+        <button class="pill" data-i="3">明天</button>
+        <button class="today-btn" id="backToday">回今天 ↩</button>
+      </div>
+
+      <div class="rail" id="rail"></div>
+      <div class="swipe-hint">← 左右滑動、點膠囊、或從行事曆點任何一天 →</div>
+    </div>
+
+    <!-- 專注遮罩:只顯示倒數、任務名、pause/stop -->
+    <div class="focus" id="focus" role="dialog" aria-label="專注中">
+      <div class="phase">🍅 Focus</div>
+      <div class="ringwrap">
+        <svg width="210" height="210" viewBox="0 0 210 210" aria-hidden="true">
+          <circle class="ring-bg" cx="105" cy="105" r="96" fill="none" stroke-width="7"/>
+          <circle class="ring-fg" id="ringFg" cx="105" cy="105" r="96" fill="none" stroke-width="7" stroke-linecap="round"/>
+        </svg>
+        <div class="t" id="focusTime">25:00</div>
+      </div>
+      <div class="task" id="focusTask">任務名稱</div>
+      <div class="paused-tag" id="pausedTag">已暫停</div>
+      <div class="ctrl">
+        <button class="btn-toggle" id="focusToggle" aria-label="暫停/繼續">⏸</button>
+        <button class="btn-stop" id="focusStop" aria-label="停止">■</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ design notes ══ -->
+  <div class="notes">
+    <section class="note">
+      <h2><span class="n">1</span>行事曆:藏在標題日期後面</h2>
+      <p>不新增按鈕 —— 直接讓現有的大日期「06 Jul」變成入口,點一下往下展開整月。這是使用者最直覺會去點的地方。</p>
+      <ul>
+        <li>每格下方的小圓點是狀態摘要:<span class="muted">灰點=有任務、紅點=有未完成/逾期、綠點=全部完成</span></li>
+        <li><b>每一天都可以點</b> → 行事曆收合、卡片滑到那一天;沒任務的日子只是顯示淡一點,點過去就能直接新增</li>
+        <li>今天永遠有白色外框,目前檢視日反白</li>
+      </ul>
+    </section>
+
+    <section class="note">
+      <h2><span class="n">2</span>建立任務時選日期:預設跟著你看的那天</h2>
+      <p>輸入框右側加一顆日期 chip。<b>核心規則:chip 預設 = 目前檢視中的卡片日</b>,所以在「明天」的卡片上打字直接就是建明天的任務,大多數情況不用多點一下。</p>
+      <ul>
+        <li>點 chip → 快速選單(今天/明天/下週一)+ 完整日期選擇器</li>
+        <li>資料上就是 todo 多一個 <code>date: 'YYYY-MM-DD'</code> 欄位,和現有 dueDate 合併為同一概念</li>
+      </ul>
+    </section>
+
+    <section class="note">
+      <h2><span class="n">3</span>每日卡片左右滑動</h2>
+      <p>白色清單區改成水平卡片軌道,一張卡=一天。手機用手勢滑、桌機可用膠囊/行事曆點選。</p>
+      <ul>
+        <li>實作用 CSS <code>scroll-snap</code>,零依賴、原生慣性手感,天數可無限往前後生成</li>
+        <li>上方「昨天|今天|明天」膠囊跟著捲動位置亮起;離開今天時出現「回今天 ↩」</li>
+        <li>昨天沒做完的事,今天卡片頂端出現紅色提示列,一鍵「移到今天」(見今天卡片)</li>
+        <li>篩選(All/Complete/Incomplete)作用在目前卡片</li>
+      </ul>
+    </section>
+
+    <section class="note">
+      <h2><span class="n">🍅</span>蕃茄鐘:開始即全畫面接管</h2>
+      <p>按任務列的 ▶ 之後,整個畫面被<b>專注遮罩</b>蓋住 —— 只留倒數時間、任務名稱、⏸ 暫停/▶ 繼續、■ 停止,其他一切(清單、行事曆、輸入框)全部看不到。<span class="muted">在 mockup 裡按任一 ▶ 試試。</span></p>
+      <ul>
+        <li><b>刻意讓你無事可做</b>:專注期間不能滑清單、不能加任務,防分心是功能不是限制</li>
+        <li>外圈黃色進度環隨秒數消耗,一眼看出這顆蕃茄吃掉多少</li>
+        <li>半透明灰遮罩 + 背景模糊 —— 清單隱約可見但不可操作,大字倒數與黃色進度環浮在上面</li>
+        <li>⏸ 暫停會停秒數並顯示「已暫停」;■ 停止放棄這顆蕃茄回到清單</li>
+        <li>實作:pomodoro store 加 <code>paused</code> 狀態;專注結束自動切換休息畫面(綠色調),休息完回清單</li>
+      </ul>
+    </section>
+
+    <section class="qa">
+      <h2>需要你拍板的三個問題</h2>
+      <ol>
+        <li><b>沒選日期的任務</b>要歸到「今天」,還是另外給一張「未排程」卡片?<span style="color:var(--ink-soft)">(建議:歸今天,簡單)</span></li>
+        <li><b>過去未完成的任務</b>要自動滾到今天,還是留在原日+紅色提示手動移?<span style="color:var(--ink-soft)">(mockup 採手動移,保留「昨天沒做完」的誠實記錄)</span></li>
+        <li>既有的 <b>dueDate 欄位與新的 date 合併</b>成一個「這天要做」的概念,可以嗎?</li>
+      </ol>
+    </section>
+  </div>
+</div>
+</div>
+
+<script>
+(function(){
+  // ── demo data:整個 7 月,每天一張卡 ──────────
+  const TODOS = {
+    '2026-07-03': [{t:'整理房間',done:true}],
+    '2026-07-04': [{t:'洗衣服',done:true},{t:'跑步 5k',done:true,star:true}],
+    '2026-07-05': [{t:'要買蘿蔔',done:false,late:true,c:2},{t:'回覆信件',done:true}],
+    '2026-07-06': [{t:'冷萃咖啡',done:true,star:true},{t:'專案週報',done:false,tom:2},{t:'buy milk',done:false}],
+    '2026-07-07': [{t:'牙醫預約 14:00',done:false},{t:'買生日禮物',done:false,star:true}],
+    '2026-07-08': [{t:'繳電費',done:false}],
+    '2026-07-15': [{t:'剪頭髮',done:false}],
+    '2026-07-28': [{t:'信用卡帳單',done:false}]
+  };
+  const WEEK = ['週日','週一','週二','週三','週四','週五','週六'];
+  const DAYS = [];
+  for(let day=1; day<=31; day++){
+    const d = '2026-07-'+String(day).padStart(2,'0');
+    const dt = new Date(d+'T00:00:00');
+    let prefix = '';
+    if(day===5) prefix='昨天 · '; if(day===6) prefix='今天 · '; if(day===7) prefix='明天 · ';
+    DAYS.push({d, label: prefix+'7/'+day+' '+WEEK[dt.getDay()], todos: TODOS[d]||[], roll: day===6?1:0});
+  }
+  const TODAY_I = 5; // 7/6
+
+  // ── build day cards ────────────────────────
+  const rail = document.getElementById('rail');
+  DAYS.forEach((day)=>{
+    const c = document.createElement('div');
+    c.className='card-day';
+    let h = '<h3>'+day.label+'</h3>';
+    if(day.roll) h += '<div class="rollover">⚠ 昨天還有 '+day.roll+' 件未完成 — 點此移到今天</div>';
+    if(day.todos.length===0) h += '<div class="empty"><b>🌤</b>這天還沒有任務<br>在上方輸入框直接新增</div>';
+    day.todos.forEach(td=>{
+      h += '<div class="todo'+(td.done?' done':'')+'">'
+        +'<span class="box"></span>'
+        +'<span class="tx"><span class="tt">'+td.t+'</span>'
+        +'<span class="meta">'
+        +(td.late?'<span class="late">逾期</span>':'')
+        +(td.c?'<span>💬 '+td.c+'</span>':'')
+        +(td.tom?'<span>🍅 '+td.tom+'</span>':'')
+        +'</span></span>'
+        +'<span class="acts"><button class="a-play" data-t="'+td.t+'" data-day="'+day.d+'">▶</button> ✎ 🗑 <span class="'+(td.star?'star':'')+'">★</span></span>'
+        +'</div>';
+    });
+    c.innerHTML = h;
+    rail.appendChild(c);
+  });
+
+  let active = TODAY_I;
+  function fmtHeader(i){
+    const d = new Date(DAYS[i].d+'T00:00:00');
+    document.getElementById('hBig').textContent = String(d.getDate()).padStart(2,'0');
+    document.getElementById('hM').textContent = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][d.getMonth()];
+    document.getElementById('hWk').textContent = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'][d.getDay()];
+  }
+  function chipLabel(i){
+    const diff = i - TODAY_I;
+    const names = {0:'今天',1:'明天','-1':'昨天'};
+    return names[diff] || '7/'+(i+1);
+  }
+  function setActive(i, scroll){
+    active = i;
+    fmtHeader(i);
+    document.getElementById('chipTxt').textContent = chipLabel(i);
+    document.querySelectorAll('#dayNav .pill').forEach(p=>{
+      p.classList.toggle('on', (TODAY_I-2 + +p.dataset.i) === i);
+    });
+    document.getElementById('backToday').classList.toggle('show', i!==TODAY_I);
+    document.querySelectorAll('.cal-cell').forEach(cell=>{
+      cell.classList.toggle('sel', cell.dataset.d===DAYS[i].d);
+    });
+    if(scroll) rail.scrollTo({left: rail.clientWidth*i, behavior:'smooth'});
+  }
+
+  rail.addEventListener('scroll', ()=>{
+    const i = Math.round(rail.scrollLeft / rail.clientWidth);
+    if(i!==active && DAYS[i]) setActive(i,false);
+  }, {passive:true});
+
+  document.querySelectorAll('#dayNav .pill').forEach(p=>{
+    p.addEventListener('click', ()=> setActive(TODAY_I-2 + +p.dataset.i, true));
+  });
+  document.getElementById('backToday').addEventListener('click', ()=> setActive(TODAY_I,true));
+
+  // ── calendar:每一天都可點 ──────────────────
+  const grid = document.getElementById('calGrid');
+  ['日','一','二','三','四','五','六'].forEach(w=>{
+    const el=document.createElement('span'); el.className='dow'; el.textContent=w; grid.appendChild(el);
+  });
+  // July 2026: 7/1 is Wednesday(3)
+  for(let b=0;b<3;b++){ const el=document.createElement('span'); grid.appendChild(el); }
+  DAYS.forEach((dayData, idx)=>{
+    const cell=document.createElement('button');
+    cell.className='cal-cell'; cell.dataset.d=dayData.d; cell.textContent=idx+1;
+    cell.setAttribute('aria-label','7月'+(idx+1)+'日');
+    if(!dayData.todos.length) cell.classList.add('dim'); // 沒任務 → 淡一點,但一樣可點
+    if(dayData.d==='2026-07-06') cell.classList.add('today');
+    if(dayData.todos.length){
+      const wrap=document.createElement('span'); wrap.className='dots';
+      const anyOpen = dayData.todos.some(t=>!t.done);
+      const anyLate = dayData.todos.some(t=>t.late&&!t.done);
+      const dot=document.createElement('span');
+      dot.className='dot'+(anyLate?' red':(anyOpen?'':' grn'));
+      wrap.appendChild(dot);
+      if(dayData.todos.length>2){const d2=document.createElement('span');d2.className='dot';wrap.appendChild(d2);}
+      cell.appendChild(wrap);
+    }
+    cell.addEventListener('click', ()=>{ setActive(idx,true); toggleCal(false); });
+    grid.appendChild(cell);
+  });
+
+  const cal = document.getElementById('cal');
+  const dateRow = document.getElementById('dateRow');
+  function toggleCal(force){
+    const open = force!==undefined ? force : !cal.classList.contains('open');
+    cal.classList.toggle('open', open);
+    dateRow.classList.toggle('open', open);
+    dateRow.setAttribute('aria-expanded', open);
+  }
+  dateRow.addEventListener('click', ()=>toggleCal());
+  dateRow.addEventListener('keydown', e=>{ if(e.key==='Enter'||e.key===' '){e.preventDefault();toggleCal();} });
+
+  // ── date chip popover ─────────────────────
+  const pop = document.getElementById('pop');
+  document.getElementById('chipDate').addEventListener('click', e=>{
+    e.stopPropagation(); pop.classList.toggle('show');
+  });
+  pop.addEventListener('click', e=>{
+    const q = e.target.dataset && e.target.dataset.q;
+    if(q==='today') setActive(TODAY_I,true);
+    if(q==='tomorrow') setActive(TODAY_I+1,true);
+    if(q==='nextweek') setActive(TODAY_I+7,true);
+    if(q) pop.classList.remove('show');
+    e.stopPropagation();
+  });
+  document.addEventListener('click', ()=>pop.classList.remove('show'));
+
+  // ── pomodoro:全畫面專注遮罩(demo) ─────────
+  const focusEl = document.getElementById('focus');
+  const ringFg = document.getElementById('ringFg');
+  const CIRC = 2*Math.PI*96;
+  ringFg.style.strokeDasharray = CIRC;
+  let pomoMode = 25, pomoLeft = 0, pomoTotal = 0, pomoTimer = null, paused = false;
+  function fmt(s){ return String(Math.floor(s/60)).padStart(2,'0')+':'+String(s%60).padStart(2,'0'); }
+  function paint(){
+    document.getElementById('focusTime').textContent = fmt(Math.max(0,pomoLeft));
+    ringFg.style.strokeDashoffset = CIRC * (1 - pomoLeft/pomoTotal);
+  }
+  function tickStart(){
+    clearInterval(pomoTimer);
+    pomoTimer = setInterval(()=>{
+      pomoLeft--; paint();
+      if(pomoLeft<=0) stopPomo();
+    },1000);
+  }
+  function stopPomo(){
+    clearInterval(pomoTimer); pomoTimer=null; paused=false;
+    focusEl.classList.remove('show');
+  }
+  function setPaused(v){
+    paused = v;
+    document.getElementById('focusToggle').textContent = paused ? '▶' : '⏸';
+    document.getElementById('pausedTag').classList.toggle('show', paused);
+    if(paused) clearInterval(pomoTimer); else tickStart();
+  }
+  document.querySelectorAll('.pomo .pm').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      pomoMode = +btn.dataset.m;
+      document.querySelectorAll('.pomo .pm').forEach(x=>x.classList.toggle('on', x===btn));
+    });
+  });
+  document.querySelectorAll('.a-play').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      pomoLeft = pomoTotal = pomoMode*60;
+      document.getElementById('focusTask').textContent = btn.dataset.t;
+      setPaused(false);
+      paint();
+      focusEl.classList.add('show');
+      tickStart();
+    });
+  });
+  document.getElementById('focusToggle').addEventListener('click', ()=> setPaused(!paused));
+  document.getElementById('focusStop').addEventListener('click', stopPomo);
+
+  // init position
+  setActive(TODAY_I,false);
+  requestAnimationFrame(()=>{ rail.scrollLeft = rail.clientWidth*TODAY_I; });
+})();
+</script>
+
+<footer style="text-align:center;margin-top:3rem;font-size:.78rem;color:#9d9689">Daily Tomato Todo · designed &amp; built with Vue 3 + Pinia</footer>
+</body>
+</html>
