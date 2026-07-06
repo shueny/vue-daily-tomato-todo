@@ -21,11 +21,13 @@ export const usePomodoroStore = defineStore('pomodoro', {
     phase: 'idle', // 'idle' | 'focus' | 'break'
     endsAt: null, // 目前階段的結束時間戳(ms);倒數以此為準
     secondsLeft: 0,
+    paused: false,
     activeTodoId: null,
     timerId: null
   }),
   getters: {
     isRunning: (state) => state.phase !== 'idle',
+    phaseTotal: (state) => (state.phase === 'idle' ? 0 : MODES[state.mode][state.phase]),
     displayTime: (state) => {
       const m = String(Math.floor(state.secondsLeft / 60)).padStart(2, '0')
       const s = String(state.secondsLeft % 60).padStart(2, '0')
@@ -43,8 +45,8 @@ export const usePomodoroStore = defineStore('pomodoro', {
       localStorage.setItem(MODE_KEY, mode)
       // 進行中切換模式:目前階段以新時長重新開始
       if (this.phase !== 'idle') {
-        this.endsAt = Date.now() + MODES[mode][this.phase] * 1000
         this.secondsLeft = MODES[mode][this.phase]
+        this.endsAt = Date.now() + this.secondsLeft * 1000
         this.saveSession()
       }
     },
@@ -58,6 +60,24 @@ export const usePomodoroStore = defineStore('pomodoro', {
       this.requestNotifyPermission()
       this.timerId = setInterval(() => this.tick(), 1000)
     },
+    pause () {
+      if (this.phase === 'idle' || this.paused) return
+      if (this.timerId) clearInterval(this.timerId)
+      this.timerId = null
+      this.paused = true
+      this.saveSession()
+    },
+    resume () {
+      if (this.phase === 'idle' || !this.paused) return
+      this.paused = false
+      this.endsAt = Date.now() + this.secondsLeft * 1000
+      this.saveSession()
+      this.timerId = setInterval(() => this.tick(), 1000)
+    },
+    togglePause () {
+      if (this.paused) this.resume()
+      else this.pause()
+    },
     stop () {
       if (this.timerId) {
         clearInterval(this.timerId)
@@ -66,6 +86,7 @@ export const usePomodoroStore = defineStore('pomodoro', {
       this.phase = 'idle'
       this.endsAt = null
       this.secondsLeft = 0
+      this.paused = false
       this.activeTodoId = null
       localStorage.removeItem(SESSION_KEY)
     },
@@ -94,6 +115,8 @@ export const usePomodoroStore = defineStore('pomodoro', {
       localStorage.setItem(SESSION_KEY, JSON.stringify({
         phase: this.phase,
         endsAt: this.endsAt,
+        paused: this.paused,
+        secondsLeft: this.secondsLeft,
         activeTodoId: this.activeTodoId
       }))
     },
@@ -105,14 +128,24 @@ export const usePomodoroStore = defineStore('pomodoro', {
       } catch (e) {
         // 壞掉的資料直接忽略
       }
-      if (!session || typeof session.endsAt !== 'number' ||
-        (session.phase !== 'focus' && session.phase !== 'break')) {
+      if (!session || (session.phase !== 'focus' && session.phase !== 'break')) {
         localStorage.removeItem(SESSION_KEY)
         return
       }
       this.phase = session.phase
-      this.endsAt = session.endsAt
       this.activeTodoId = session.activeTodoId
+      if (session.paused) {
+        // 暫停中:凍結的剩餘秒數原樣還原,保持暫停
+        this.paused = true
+        this.secondsLeft = session.secondsLeft || MODES[this.mode][this.phase]
+        this.endsAt = Date.now() + this.secondsLeft * 1000
+        return
+      }
+      if (typeof session.endsAt !== 'number') {
+        this.stop()
+        return
+      }
+      this.endsAt = session.endsAt
       this.timerId = setInterval(() => this.tick(), 1000)
       // 立即校正一次:若離開期間階段已結束,tick 會補發蕃茄並轉換或收尾
       this.tick()

@@ -40,17 +40,19 @@
           <span class="tomato-count px-2" v-if="item.tomatoes">
             🍅 {{ item.tomatoes }}
           </span>
-          <span class="due-date px-2" :class="{ 'overdue': isOverdue }" v-if="item.dueDate">
-            <b class="icon"><font-awesome-icon icon="calendar-alt"/></b>
-            {{ item.dueDate }}<template v-if="isOverdue"> (逾期)</template>
+          <span class="overdue-area" v-if="isOverdue">
+            <span class="late px-1">逾期</span>
+            <button type="button" class="btn btn-move-today" @click="moveToToday">
+              移到今天 →
+            </button>
           </span>
         </div>
     </div>
   </div>
 </template>
 <script>
-import moment from 'moment'
 import { usePomodoroStore } from '@/stores/pomodoro'
+import { useTodoStore, today } from '@/stores/todo'
 
 export default {
   name: 'TodoList',
@@ -58,16 +60,15 @@ export default {
   emits: ['remove-todo', 'edit-todo', 'mark-todo'],
   setup () {
     const pomodoroStore = usePomodoroStore()
-    return { pomodoroStore }
+    const todoStore = useTodoStore()
+    return { pomodoroStore, todoStore }
   },
   computed: {
     isFocusing () {
       return this.pomodoroStore.isRunning && this.pomodoroStore.activeTodoId === this.item.id
     },
     isOverdue () {
-      // dueDate 為 YYYY-MM-DD,字串比較即為日期比較
-      return !!this.item.dueDate && !this.item.completed &&
-        this.item.dueDate < moment().format('YYYY-MM-DD')
+      return !this.item.completed && this.item.date < today()
     }
   },
   methods: {
@@ -77,6 +78,9 @@ export default {
       } else {
         this.pomodoroStore.startFocus(this.item.id)
       }
+    },
+    moveToToday () {
+      this.todoStore.moveTodo(this.item, today())
     },
     removeTodo (item) {
       this.$emit('remove-todo', item)
