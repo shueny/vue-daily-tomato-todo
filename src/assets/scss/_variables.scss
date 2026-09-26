@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css?family=Noto+Sans+TC|Nunito');
+@import url('https://fonts.googleapis.com/css2?family=Huninn&family=Nunito:wght@400;700;800;900&family=Noto+Sans+TC:wght@400;700&display=swap');
 $dark-grey: #4a4a4a;
 $light-grey: #bfbfbf;
 $red: #ff3f3f;
@@ -9,7 +9,20 @@ $orange: #FFCC22;
 $mango: #FFCC22;
 $white: #ffffff;
 $font4: 4px;
-$font-family: "Nunito","Noto Sans TC", sans-serif;
+$font-family: "Nunito", "Huninn", "Noto Sans TC", sans-serif;
+
+// 蕃茄主題色
+$tomato: #ff6b5b;
+$tomato-deep: #e8503f;
+$tomato-pale: #ffe4dc;
+$leaf: #5cbf6e;
+$leaf-deep: #3e8e4f;
+$cream: #fff8ef;
+$butter: #ffe08a;
+$cocoa: #5b3a29;
+$cocoa-soft: #a08476;
+$line: #f3e3d6;
+$pink: #ff8fa0;
 
 $pc-media: 960px;
 $pcs-media: 959px;
@@ -55,7 +68,16 @@ h1, h2, h3, h4, h5, h6,
 .h1, .h2, .h3, .h4, .h5, .h6,
 p, #app {
   font-family: $font-family;
-  color: $dark-grey;
+  color: $cocoa;
+}
+
+body {
+  background-color: #fff1e6;
+  background-image: radial-gradient(rgba(255, 107, 91, 0.13) 2.5px, transparent 3px),
+    radial-gradient(rgba(92, 191, 110, 0.12) 2.5px, transparent 3px);
+  background-size: 34px 34px;
+  background-position: 0 0, 17px 17px;
+  min-height: 100vh;
 }
 
 a {
