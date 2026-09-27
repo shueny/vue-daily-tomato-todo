@@ -20,6 +20,45 @@
     box-shadow: 0 14px 40px rgba(232, 80, 63, 0.18), 0 2px 0 rgba(232, 80, 63, 0.08);
   }
 
+  /* ── 最上方:品牌 + 主題切換 ── */
+  .topbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 14px 8px 20px;
+
+    &__brand {
+      font-size: 11px;
+      font-weight: 900;
+      letter-spacing: 0.28em;
+      color: $tomato-deep;
+    }
+  }
+  .theme-switch {
+    display: flex;
+    background: #fff;
+    border-radius: 20px;
+    padding: 3px;
+    box-shadow: inset 0 0 0 2px $line;
+
+    button {
+      min-height: 32px;
+      border: 0;
+      background: none;
+      border-radius: 16px;
+      padding: 0 14px;
+      font-size: 12px;
+      font-weight: 800;
+      color: $cocoa-soft;
+      cursor: pointer;
+
+      &.active {
+        background: $tomato;
+        color: #fff;
+      }
+    }
+  }
+
   /* ── 頂部日期 + 吉祥物 ── */
   .header {
     position: relative;
@@ -29,7 +68,8 @@
     padding: 18px 16px 20px 20px;
     background: linear-gradient(160deg, #ff8a70 0%, $tomato 55%, $tomato-deep 100%);
     color: #fff;
-    border-radius: 0 0 26px 26px;
+    border-radius: 26px;
+    margin: 0 8px;
 
     // 小圓點裝飾
     &::before {
@@ -329,34 +369,42 @@
     gap: 8px;
     padding: 12px 16px 0;
 
-    &__modes {
+    &__length {
+      white-space: nowrap;
       display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      min-height: 36px;
+      border: 0;
       background: #fff;
       border-radius: 20px;
-      padding: 3px;
+      padding: 4px 6px 4px 12px;
       box-shadow: inset 0 0 0 2px $line;
-    }
-    &__mode {
-      border: 0;
-      background: none;
-      border-radius: 16px;
       color: $cocoa-soft;
-      font-weight: 900;
       font-size: 13px;
-      padding: 4px 12px;
+      font-weight: 800;
       cursor: pointer;
-      transition: background 0.2s, color 0.2s;
+      transition: box-shadow 0.2s;
 
-      &.active {
-        background: $tomato;
-        color: #fff;
-      }
-      &:hover:not(.active) {
+      b {
         color: $tomato-deep;
+        font-weight: 900;
       }
+      &:hover {
+        box-shadow: inset 0 0 0 2px $tomato;
+      }
+    }
+    &__edit {
+      margin-left: 4px;
+      background: $tomato;
+      color: #fff;
+      border-radius: 14px;
+      padding: 2px 9px;
+      font-size: 11px;
     }
     &__hint {
       margin-left: auto;
+      white-space: nowrap;
       font-size: 12px;
       color: $cocoa-soft;
 
@@ -725,6 +773,12 @@
     font-weight: 700;
     color: $cocoa-soft;
 
+    .ti-tomato-icon {
+      font-style: normal;
+      &::before {
+        content: "🍅";
+      }
+    }
     .ti-tomatoes b {
       font-weight: 900;
       color: $tomato-deep;
@@ -789,6 +843,9 @@
     &.ti-del:hover {
       color: $tomato-deep;
     }
+  }
+  .ti-more {
+    display: none;
   }
   .done .ti-play {
     opacity: 0.5;
@@ -933,6 +990,18 @@
     .modal-footer {
       border: 0;
       padding-top: 0;
+    }
+    .btn--delete {
+      border: 0;
+      border-radius: 20px;
+      background: none;
+      color: $tomato-deep;
+      font-weight: 800;
+      padding: 8px 16px;
+      cursor: pointer;
+      &:hover {
+        background: $tomato-pale;
+      }
     }
     .btn--save {
       border: 0;
@@ -1082,5 +1151,168 @@
 @supports not (backdrop-filter: blur(1px)) {
   .focus-overlay {
     background: rgba(255, 241, 230, 0.97);
+  }
+}
+
+/* ── 設定時間面板 ── */
+.duration-sheet {
+  position: fixed;
+  inset: 0;
+  z-index: 1900;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  background: rgba(91, 58, 41, 0.35);
+  -webkit-backdrop-filter: blur(6px);
+  backdrop-filter: blur(6px);
+  font-family: $font-family;
+
+  .ds-panel {
+    width: 100%;
+    max-width: 360px;
+    max-height: calc(100vh - 32px);
+    overflow-y: auto;
+    background: $cream;
+    border-radius: 28px;
+    padding: 16px 20px 18px;
+    box-shadow: 0 20px 50px rgba(120, 50, 30, 0.3);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    color: $cocoa;
+  }
+  .ds-head {
+    align-self: stretch;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .ds-title {
+    margin: 0;
+    font-size: 17px;
+    font-weight: 900;
+    color: $cocoa;
+  }
+  .ds-close {
+    width: 40px;
+    height: 40px;
+    border: 0;
+    border-radius: 50%;
+    background: #fff;
+    color: $cocoa-soft;
+    font-size: 15px;
+    cursor: pointer;
+  }
+  .ds-clock {
+    margin-top: 8px;
+    padding: 12px;
+    border-radius: 50%;
+    background: #fff;
+    box-shadow: 0 6px 0 $line;
+  }
+  .ds-hint {
+    margin: 12px 0 4px;
+    font-size: 12px;
+    color: $cocoa-soft;
+  }
+  .ds-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-top: 10px;
+
+    &--break {
+      margin-top: 14px;
+      padding-top: 14px;
+      border-top: 2px dashed $line;
+    }
+  }
+  .ds-label,
+  .ds-range {
+    width: 40px;
+    font-size: 12px;
+    font-weight: 800;
+    color: $cocoa-soft;
+  }
+  .ds-range {
+    font-size: 11px;
+    font-weight: 700;
+  }
+  .ds-step {
+    width: 44px;
+    height: 44px;
+    border: 0;
+    border-radius: 50%;
+    background: $tomato-pale;
+    color: $tomato-deep;
+    font-size: 22px;
+    font-weight: 900;
+    line-height: 1;
+    cursor: pointer;
+
+    &:disabled {
+      opacity: 0.35;
+      cursor: default;
+    }
+  }
+  .ds-value {
+    width: 76px;
+    text-align: center;
+    font-size: 32px;
+    font-weight: 900;
+    font-variant-numeric: tabular-nums;
+    color: $tomato-deep;
+    line-height: 1;
+
+    small {
+      font-size: 13px;
+      color: $cocoa-soft;
+      padding-left: 3px;
+    }
+    &--break {
+      color: $leaf-deep;
+    }
+  }
+  .ds-presets {
+    display: flex;
+    gap: 6px;
+    margin-top: 10px;
+  }
+  .ds-preset {
+    min-height: 40px;
+    min-width: 58px;
+    border: 0;
+    border-radius: 20px;
+    background: #fff;
+    box-shadow: inset 0 0 0 2px $line;
+    color: $cocoa-soft;
+    font-size: 13px;
+    font-weight: 800;
+    cursor: pointer;
+
+    &.active {
+      background: $tomato;
+      color: #fff;
+      box-shadow: 0 3px 0 $tomato-deep;
+    }
+  }
+  .ds-done {
+    align-self: stretch;
+    margin-top: 18px;
+    height: 48px;
+    border: 0;
+    border-radius: 24px;
+    background: $leaf;
+    color: #fff;
+    font-size: 15px;
+    font-weight: 900;
+    box-shadow: 0 3px 0 $leaf-deep;
+    cursor: pointer;
+  }
+  .ds-note {
+    margin: 10px 0 0;
+    font-size: 11px;
+    color: $cocoa-soft;
   }
 }

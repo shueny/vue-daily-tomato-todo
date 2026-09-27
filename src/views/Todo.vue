@@ -1,6 +1,21 @@
 <template>
-  <div class="app-todo">
+  <div class="app-todo" :class="'theme-' + ui.theme">
     <div class="container app-card">
+      <div class="topbar">
+        <span class="topbar__brand">DAILY TOMATO</span>
+        <div class="theme-switch" role="group" aria-label="介面主題">
+          <button
+            v-for="t in themeOptions"
+            :key="t.key"
+            type="button"
+            :class="{ active: ui.theme === t.key }"
+            :aria-pressed="ui.theme === t.key"
+            @click="ui.setTheme(t.key)"
+          >
+            {{ t.label }}
+          </button>
+        </div>
+      </div>
       <section class="header">
         <div
           class="header-toggle"
@@ -13,7 +28,7 @@
         >
           <span class="day" v-text="headDay"></span>
           <span class="yearMonth">
-            <b class="month" v-text="headMonth"></b>
+            <b class="month" v-text="ui.isRetro ? headMonth + ' · ' + headWeek : headMonth"></b>
             <b class="year" v-text="headYear"></b>
           </span>
           <span class="caret" :class="{ open: calOpen }">▾</span>
@@ -22,9 +37,24 @@
             <b class="clock" v-text="timeMessage"></b>
           </span>
         </div>
-        <div class="hd-buddy">
+        <div class="hd-buddy" v-if="!ui.isRetro">
           <TomatoBuddy :size="62" :mood="headerMood" bounce />
         </div>
+        <button
+          v-else
+          type="button"
+          class="duration-pill"
+          :aria-label="durationLabel"
+          @click="ui.durationOpen = true"
+        >
+          <span class="duration-pill__text">
+            <small>專注 · 休息</small>
+            <b>{{ focusMinutes }} · {{ breakMinutes }} 分</b>
+          </span>
+          <span class="duration-pill__icon" aria-hidden="true">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M4 7h10M18 7h2M4 17h4M12 17h8" /><circle cx="16" cy="7" r="2" /><circle cx="10" cy="17" r="2" /></svg>
+          </span>
+        </button>
       </section>
 
       <transition name="cal-slide">
@@ -34,7 +64,7 @@
       <section class="addTask">
         <input placeholder="今天想完成什麼呢?" v-model="newTodo" @keyup.enter="addTodo" />
         <button type="button" class="chip-date" @click.stop="popOpen = !popOpen">
-          📅 {{ chipLabel }}
+          <span class="emoji" aria-hidden="true">📅</span> {{ chipLabel }}
         </button>
         <button type="button" class="btn--add" aria-label="新增任務" @click="addTodo">+</button>
         <transition name="pop">
@@ -50,21 +80,12 @@
         </transition>
       </section>
 
-      <section class="pomodoro">
-        <div class="pomodoro__modes" role="group" aria-label="蕃茄鐘長度">
-          <button
-            v-for="m in ['25/5', '50/10']"
-            :key="m"
-            type="button"
-            class="pomodoro__mode"
-            :class="{ active: pomodoroMode === m }"
-            :aria-pressed="pomodoroMode === m"
-            @click="pomodoroStore.setMode(m)"
-          >
-            {{ m }}
-          </button>
-        </div>
-        <span class="pomodoro__hint">按任務的 <b class="mini-play">▶</b> 種一顆蕃茄</span>
+      <section class="pomodoro" v-if="!ui.isRetro">
+        <button type="button" class="pomodoro__length" :aria-label="durationLabel" @click="ui.durationOpen = true">
+          ⏱ 專注 <b>{{ focusMinutes }}</b> · 休息 <b>{{ breakMinutes }}</b>
+          <span class="pomodoro__edit">調整</span>
+        </button>
+        <span class="pomodoro__hint">按 <b class="mini-play">▶</b> 種蕃茄</span>
       </section>
 
       <div class="daynav">
@@ -101,7 +122,7 @@
             :title="s.title"
             @click="todoStore.setSortMode(s.key)"
           >
-            {{ s.label }}
+            <span class="emoji" aria-hidden="true">{{ s.icon }}</span> {{ s.label }}
           </button>
         </div>
       </div>
@@ -113,10 +134,19 @@
               <h3 class="day-card__label">{{ dayLabel(d) }}</h3>
               <span class="day-card__stats" v-if="statsFor(d).total">
                 {{ statsFor(d).done }}/{{ statsFor(d).total }} 完成
-                <template v-if="statsFor(d).tomatoes"> · 🍅×{{ statsFor(d).tomatoes }}</template>
+                <template v-if="statsFor(d).tomatoes">
+                  · {{ ui.isRetro ? statsFor(d).tomatoes + ' 顆蕃茄' : '🍅×' + statsFor(d).tomatoes }}
+                </template>
               </span>
             </div>
-            <div class="progress-vine" v-if="statsFor(d).total" aria-hidden="true">
+            <div class="progress-ticks" v-if="ui.isRetro && statsFor(d).total" aria-hidden="true">
+              <span
+                v-for="i in tickCount(d)"
+                :key="i"
+                :class="{ on: i <= ticksOn(d) }"
+              ></span>
+            </div>
+            <div class="progress-vine" v-else-if="statsFor(d).total" aria-hidden="true">
               <div class="progress-vine__fill" :style="{ width: progressOf(d) + '%' }"></div>
               <span class="progress-vine__knob" :style="{ left: progressOf(d) + '%' }">
                 {{ progressOf(d) === 100 ? '🎉' : '🍅' }}
@@ -151,7 +181,8 @@
               ></TodoList>
             </transition-group>
             <div class="day-card__empty" v-else>
-              <TomatoBuddy :size="72" mood="sleep" />
+              <svg v-if="ui.isRetro" class="empty-logo" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 7c4.5-1.5 9 1 9 6s-4 8-9 8-9-3-9-8 4.5-7.5 9-6z" /><path d="M12 7l-3.5-2M12 7l3.5-2M12 7V3M12 7l-4.5 1.2M12 7l4.5 1.2" /></svg>
+              <TomatoBuddy v-else :size="72" mood="sleep" />
               <p>這天還沒有任務<br />在上方輸入框新增一個吧</p>
             </div>
             <p class="day-card__tip" v-if="listFor(d).length > 1 && sortMode === 'manual'">
@@ -187,6 +218,7 @@
     </div>
 
     <FocusOverlay />
+    <DurationSheet />
 
     <!-- Modal -->
     <div
@@ -252,11 +284,19 @@
           <div class="modal-footer justify-content-center">
             <button
               type="button"
+              class="btn--delete"
+              data-dismiss="modal"
+              @click="deleteEditing()"
+            >
+              刪除任務
+            </button>
+            <button
+              type="button"
               class="btn--save"
               data-dismiss="modal"
               @click="doneEdit()"
             >
-              儲存 🍅
+              儲存 <span class="emoji" aria-hidden="true">🍅</span>
             </button>
           </div>
         </div>
@@ -267,6 +307,7 @@
 
 <style lang="scss">
 @import "@/assets/scss/_todo.scss";
+@import "@/assets/scss/_retro.scss";
 
 /* ── 動畫 ── */
 /* 清單項目:進場彈跳、離場滑出、重排平移 */
@@ -364,6 +405,8 @@ import TodoList from "@/components/TodoList.vue";
 import CalendarPanel from "@/components/CalendarPanel.vue";
 import FocusOverlay from "@/components/FocusOverlay.vue";
 import TomatoBuddy from "@/components/TomatoBuddy.vue";
+import DurationSheet from "@/components/DurationSheet.vue";
+import { useUiStore } from "@/stores/ui";
 import { useTodoStore, today } from "@/stores/todo";
 import { usePomodoroStore } from "@/stores/pomodoro";
 
@@ -371,11 +414,11 @@ const WINDOW_RADIUS = 30; // 卡片視窗:檢視日前後各 30 天
 
 export default {
   name: "Todo",
-  components: { TodoList, CalendarPanel, FocusOverlay, TomatoBuddy },
+  components: { TodoList, CalendarPanel, FocusOverlay, TomatoBuddy, DurationSheet },
   setup() {
     const todoStore = useTodoStore();
     const pomodoroStore = usePomodoroStore();
-    return { todoStore, pomodoroStore };
+    return { todoStore, pomodoroStore, ui: useUiStore() };
   },
   data() {
     return {
@@ -392,10 +435,14 @@ export default {
       clockTimer: null,
       drag: null, // 拖曳排序中:{ id, listEl }
       sortOptions: [
-        { key: "manual", label: "✋ 自訂", title: "自己拖曳排順序" },
-        { key: "star", label: "⭐ 重要", title: "星號任務排前面" },
-        { key: "tomato", label: "🍅 蕃茄", title: "蕃茄多的排前面" },
-        { key: "newest", label: "🆕 最新", title: "最新新增的排前面" }
+        { key: "manual", icon: "✋", label: "自訂", title: "自己拖曳排順序" },
+        { key: "star", icon: "⭐", label: "重要", title: "星號任務排前面" },
+        { key: "tomato", icon: "🍅", label: "蕃茄", title: "蕃茄多的排前面" },
+        { key: "newest", icon: "🆕", label: "最新", title: "最新新增的排前面" }
+      ],
+      themeOptions: [
+        { key: "cute", label: "可愛" },
+        { key: "retro", label: "復古" }
       ],
       filterOptions: [
         { key: "all", label: "全部" },
@@ -414,7 +461,10 @@ export default {
       "sortMode",
       "sinkDone"
     ]),
-    ...mapState(usePomodoroStore, { pomodoroMode: "mode" }),
+    ...mapState(usePomodoroStore, ["focusMinutes", "breakMinutes"]),
+    durationLabel() {
+      return `調整時間,目前專注 ${this.focusMinutes} 分、休息 ${this.breakMinutes} 分`;
+    },
     todayStr() {
       return today();
     },
@@ -468,6 +518,19 @@ export default {
     progressOf(d) {
       const st = this.statsFor(d);
       return st.total ? Math.round((st.done / st.total) * 100) : 0;
+    },
+    // 復古進度刻度:最多 12 格,任務多時按比例填
+    tickCount(d) {
+      return Math.min(this.statsFor(d).total, 12);
+    },
+    ticksOn(d) {
+      const st = this.statsFor(d);
+      return st.total <= 12 ? st.done : Math.round((st.done / st.total) * 12);
+    },
+    deleteEditing() {
+      if (!this.editingTodo) return;
+      this.todoStore.removeTodo(this.editingTodo);
+      this.cancelEdit();
     },
     shiftDate(days) {
       return moment(today(), "YYYY-MM-DD").add(days, "day").format("YYYY-MM-DD");

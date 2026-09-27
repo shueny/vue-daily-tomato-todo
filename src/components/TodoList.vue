@@ -26,7 +26,7 @@
       <label class="ti-title" :for="'todo-' + item.id">{{ item.title }}</label>
       <div class="ti-meta" v-if="item.tomatoes || (item.comments && item.comments.length) || isOverdue">
         <span class="ti-tomatoes" v-if="item.tomatoes" :title="`${item.tomatoes} 顆蕃茄`">
-          🍅<b v-if="item.tomatoes > 1">×{{ item.tomatoes }}</b>
+          <i class="ti-tomato-icon" aria-hidden="true"></i><b v-if="item.tomatoes > 1">×{{ item.tomatoes }}</b>
         </span>
         <span class="ti-comments" v-if="item.comments && item.comments.length">
           <font-awesome-icon :icon="['far', 'comment-dots']" /> {{ item.comments.length }}
@@ -54,6 +54,11 @@
       </button>
       <button class="ti-btn ti-del" type="button" aria-label="刪除" @click="removeTodo(item)">
         <font-awesome-icon icon="trash-alt" />
+      </button>
+      <!-- 復古主題:編輯/刪除收進「更多」,打開編輯視窗 -->
+      <button type="button" class="ti-btn ti-more" aria-label="更多動作(編輯、刪除)" @click="editTodo(item)"
+        data-toggle="modal" data-target="#editModal">
+        <font-awesome-icon icon="ellipsis-h" />
       </button>
     </div>
   </div>
