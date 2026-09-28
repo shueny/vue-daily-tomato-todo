@@ -1,52 +1,65 @@
 <template>
-  <div>
-    <div class="list-group-item text-left">
-        <div class="d-flex">
-          <div class="form-check">
-            <label class="form-check-label" :for="item.id"
-            :class="{'completed': item.completed }">{{ item.title }}
-              <input class="form-check-input" type="checkbox"
-              v-model="item.completed" :id="item.id"/>
-              <span class="checkmark"></span>
-            </label>
-          </div>
-          <button type="button" class="btn btn-pomodoro mx-1" :class="{'running': isFocusing }"
-          :title="isFocusing ? 'Stop pomodoro' : 'Start pomodoro'" @click="togglePomodoro">
-            <font-awesome-icon :icon="isFocusing ? 'stop' : 'play'"/>
-          </button>
-          <button type="button" class="btn btn-default btn-edit mx-1" @click="editTodo(item)"
-          data-toggle="modal" data-target="#editModal">
-            <font-awesome-icon icon="edit"/>
-          </button>
-          <button class="btn close ml-auto mx-1" type="button"
-          aria-label="Close" @click="removeTodo(item)">
-            <font-awesome-icon icon="trash-alt" />
-          </button>
-          <button class="btn star ml-auto" :class="{'active': item.marked }"
-          type="button" aria-label="" @click="markTodos(item)">
-            <font-awesome-icon icon="star" />
-          </button>
-        </div>
-        <div class="pl-4 noteArea">
-          <span class="date px-2">
-            <b class="icon"><font-awesome-icon :icon="['far','calendar-check']"/></b>
-            {{ item.messageDate }}
-          </span>
-          <span class="comment-count px-2"
-          v-if="item.comments">
-            <b class="icon"><font-awesome-icon :icon="['far','comment-dots']"/></b>
-            {{ item.comments.length }}
-          </span>
-          <span class="tomato-count px-2" v-if="item.tomatoes">
-            🍅 {{ item.tomatoes }}
-          </span>
-          <span class="overdue-area" v-if="isOverdue">
-            <span class="late px-1">逾期</span>
-            <button type="button" class="btn btn-move-today" @click="moveToToday">
-              移到今天 →
-            </button>
-          </span>
-        </div>
+  <div
+    class="todo-item"
+    :data-id="item.id"
+    :class="{ done: item.completed, starred: item.marked, dragging, focusing: isFocusing }"
+  >
+    <button
+      v-if="draggable"
+      type="button"
+      class="ti-handle"
+      aria-label="拖曳排序(也可用上下鍵)"
+      title="拖曳排序"
+      @pointerdown="$emit('drag-start', $event, item)"
+      @keydown.up.prevent="$emit('nudge', item, -1)"
+      @keydown.down.prevent="$emit('nudge', item, 1)"
+    >
+      <span></span><span></span><span></span>
+    </button>
+
+    <label class="ti-check" :for="'todo-' + item.id">
+      <input type="checkbox" v-model="item.completed" :id="'todo-' + item.id" />
+      <span class="ti-box" aria-hidden="true"></span>
+    </label>
+
+    <div class="ti-body">
+      <label class="ti-title" :for="'todo-' + item.id">{{ item.title }}</label>
+      <div class="ti-meta" v-if="item.tomatoes || (item.comments && item.comments.length) || isOverdue">
+        <span class="ti-tomatoes" v-if="item.tomatoes" :title="`${item.tomatoes} 顆蕃茄`">
+          <i class="ti-tomato-icon" aria-hidden="true"></i><b v-if="item.tomatoes > 1">×{{ item.tomatoes }}</b>
+        </span>
+        <span class="ti-comments" v-if="item.comments && item.comments.length">
+          <font-awesome-icon :icon="['far', 'comment-dots']" /> {{ item.comments.length }}
+        </span>
+        <span class="ti-overdue" v-if="isOverdue">
+          <span class="late">逾期</span>
+          <button type="button" class="btn-move-today" @click="moveToToday">移到今天 →</button>
+        </span>
+      </div>
+    </div>
+
+    <div class="ti-actions">
+      <button class="ti-btn ti-star" :class="{ active: item.marked }" type="button"
+        :aria-label="item.marked ? '取消重要' : '標為重要'" :aria-pressed="item.marked" @click="markTodos(item)">
+        <font-awesome-icon icon="star" />
+      </button>
+      <button type="button" class="ti-btn ti-play" :class="{ running: isFocusing }"
+        :aria-label="isFocusing ? '停止蕃茄鐘' : '開始蕃茄鐘'" :title="isFocusing ? '停止蕃茄鐘' : '開始蕃茄鐘'"
+        @click="togglePomodoro">
+        <font-awesome-icon :icon="isFocusing ? 'stop' : 'play'" />
+      </button>
+      <button type="button" class="ti-btn ti-edit" aria-label="編輯" @click="editTodo(item)"
+        data-toggle="modal" data-target="#editModal">
+        <font-awesome-icon icon="edit" />
+      </button>
+      <button class="ti-btn ti-del" type="button" aria-label="刪除" @click="removeTodo(item)">
+        <font-awesome-icon icon="trash-alt" />
+      </button>
+      <!-- 復古主題:編輯/刪除收進「更多」,打開編輯視窗 -->
+      <button type="button" class="ti-btn ti-more" aria-label="更多動作(編輯、刪除)" @click="editTodo(item)"
+        data-toggle="modal" data-target="#editModal">
+        <font-awesome-icon icon="ellipsis-h" />
+      </button>
     </div>
   </div>
 </template>
@@ -56,8 +69,12 @@ import { useTodoStore, today } from '@/stores/todo'
 
 export default {
   name: 'TodoList',
-  props: ['item'],
-  emits: ['remove-todo', 'edit-todo', 'mark-todo'],
+  props: {
+    item: { type: Object, required: true },
+    draggable: { type: Boolean, default: false },
+    dragging: { type: Boolean, default: false }
+  },
+  emits: ['remove-todo', 'edit-todo', 'mark-todo', 'drag-start', 'nudge'],
   setup () {
     const pomodoroStore = usePomodoroStore()
     const todoStore = useTodoStore()

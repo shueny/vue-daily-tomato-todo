@@ -1,263 +1,1318 @@
 @import "@/assets/scss/_variables.scss";
+
 .app-todo {
-  .container {
-    max-width: 375px;
-    margin: ($font4 * 3 - 2px) auto;
-    border: 1px solid $orange;
+  padding: 18px 12px 40px;
+
+  button {
+    font-family: inherit;
+  }
+
+  /* ── 外框卡片 ── */
+  .app-card {
+    max-width: 400px;
+    margin: 0 auto;
     padding: 0;
-    border-radius: 0.5rem;
+    background: $cream;
+    border: 3px solid #fff;
+    border-radius: 28px;
     overflow: hidden;
     font-family: $font-family;
-    box-shadow: $font4 $font4 * 2 $font4 * 4 0 rgba(0, 0, 0, 0.1);
+    box-shadow: 0 14px 40px rgba(232, 80, 63, 0.18), 0 2px 0 rgba(232, 80, 63, 0.08);
+  }
 
-    .header {
-      max-height: $font4 * 15;
-      padding: $font4 * 4;
-      background: $orange;
-      border-top-left-radius: 0.5em;
-      border-top-right-radius: 0.5em;
+  /* ── 最上方:品牌 + 主題切換 ── */
+  .topbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 14px 8px 20px;
 
-      .text {
-        height: $font4 * 8 - 2px;
-        text-align: left;
-        line-height: $font4 * 8 - 2px;
-        font-family: $font-family;
-        color: $dark-grey;
-
-        span {
-          margin-right: 5px;
-          display: inline-block;
-
-          &:last-child {
-            margin-right: 0;
-          }
-          &.day {
-            font-size: $font4 * 9;
-            font-weight: bold;
-          }
-
-          &.week {
-            font-size: $font4 * 6;
-            float: right;
-          }
-          b {
-            display: block;
-            line-height: $font4 * 4;
-            font-weight: normal;
-          }
-        }
-      }
+    &__brand {
+      font-size: 11px;
+      font-weight: 900;
+      letter-spacing: 0.28em;
+      color: $tomato-deep;
     }
-    .addTask {
-      padding: $font4 * 4;
-      position: relative;
-      background-color: $mango;
+  }
+  .theme-switch {
+    display: flex;
+    background: #fff;
+    border-radius: 20px;
+    padding: 3px;
+    box-shadow: inset 0 0 0 2px $line;
 
-      input {
-        width: 100%;
-        height: $font4 * 9 - 1px;
-        border-radius: $font4 * 5;
-        border: 1px solid $orange;
-        padding-right: $font4 * 10;
-        padding-left: $font4 * 3 - 2px;
-        -webkit-appearance: none;
-        outline: 0px;
-        color: lighten($dark-grey, 30%);
-
-        &:focus {
-          width: 100%;
-          height: $font4 * 8;
-          border-radius: $font4 * 8;
-          border: 1px solid $orange;
-        }
-      }
-    }
-    .btn {
-      font-size: $font4 * 4;
-      line-height: $font4 * 4;
-      padding: 0 $font4;
-      color: lighten($dark-grey, 20%);
+    button {
+      min-height: 32px;
+      border: 0;
+      background: none;
+      border-radius: 16px;
+      padding: 0 14px;
+      font-size: 12px;
+      font-weight: 800;
+      color: $cocoa-soft;
       cursor: pointer;
 
-      &:hover,
-      &:focus {
-        color: $white;
-        background: darken($white, 15%);
-      }
-      &--add {
-        width: $font4 * 9 - 2px;
-        height: $font4 * 9 - 2px;
-        font-size: $font4 * 8 - 2px;
-        background: $orange;
-        border-radius: 50%;
-        color: $white;
-        font-weight: bold;
-        font-size: $font4 * 8 - 2px;
-        line-height: $font4 * 4;
-        padding: ($font4 * 2 - 3px) ($font4 * 2 - 1px);
-        right: $font4 * 4;
-        transition: 250ms ease-out;
-        position: absolute;
-        // box-shadow: 1px 1px $font4 $light-grey;
-        border: 2px solid $white;
-        top: $font4 * 4;
-        transition: all 0.3s ease-in-out;
-
-        
-        &:hover,
-        &:focus {
-            color: #fff;
-            background: lighten($orange, 25%);
-            transform: rotate(45deg);
-        }
-      }
-
-      &.filters__btn {
-        width: auto;
-        height: auto;
-        background: $white;
-        border: 1px solid $dark-grey;
-        color: lighten($dark-grey, 25%);
-        display: inline-flex;
-        justify-content: space-around;
-        font-size: $font4 * 4;
-        border: 1px solid lighten($dark-grey, 25%);
-        border-radius: $font4 * 6;
-        font-weight: normal;
-
-        &--add {
-          margin: 0;
-        }
-
-        &:hover {
-          color: $white;
-          background: lighten($dark-grey, 35%);
-        }
-        &.active {
-          color: $white;
-          border-color: $white;
-          background: $orange;
-          box-shadow: none;
-        }
-      }
-      &--save {
-        background-color: darken($mango, 10%);
-        color: $white;
-        padding: .375rem .75rem;
-        border: 0px;
+      &.active {
+        background: $tomato;
+        color: #fff;
       }
     }
-    .filters {
-      width: 100%;
+  }
+
+  /* ── 頂部日期 + 吉祥物 ── */
+  .header {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 18px 16px 20px 20px;
+    background: linear-gradient(160deg, #ff8a70 0%, $tomato 55%, $tomato-deep 100%);
+    color: #fff;
+    border-radius: 26px;
+    margin: 0 8px;
+
+    // 小圓點裝飾
+    &::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      border-radius: inherit;
+      background-image: radial-gradient(rgba(255, 255, 255, 0.16) 3px, transparent 3.5px);
+      background-size: 22px 22px;
+      pointer-events: none;
+    }
+  }
+  .header-toggle {
+    position: relative;
+    flex: 1;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    text-align: left;
+    cursor: pointer;
+    border-radius: 16px;
+    outline: 0;
+
+    &:focus-visible {
+      box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.6);
+    }
+    .day {
+      font-size: 46px;
+      font-weight: 900;
+      line-height: 1;
+      text-shadow: 0 3px 0 rgba(160, 40, 25, 0.25);
+    }
+    .yearMonth b {
+      display: block;
+      line-height: 1.15;
+    }
+    .month {
+      font-size: 17px;
+      font-weight: 900;
+      letter-spacing: 0.04em;
+    }
+    .year {
+      font-size: 12px;
+      font-weight: 700;
+      opacity: 0.85;
+    }
+    .caret {
+      font-size: 13px;
+      opacity: 0.85;
+      transition: transform 0.25s;
+      &.open {
+        transform: rotate(180deg);
+      }
+    }
+    .hd-right {
+      margin-left: auto;
+      text-align: right;
+      b {
+        display: block;
+        line-height: 1.25;
+      }
+      .week {
+        font-size: 15px;
+        font-weight: 900;
+      }
+      .clock {
+        font-size: 11px;
+        font-weight: 700;
+        opacity: 0.85;
+        font-variant-numeric: tabular-nums;
+      }
+    }
+  }
+  .hd-buddy {
+    position: relative;
+    flex: 0 0 auto;
+    margin: -6px -4px -10px 0;
+    filter: drop-shadow(0 3px 0 rgba(160, 40, 25, 0.25));
+  }
+
+  /* ── 行事曆 ── */
+  .calendar-panel {
+    margin: 12px 14px 0;
+    padding: 10px 10px 12px;
+    background: #fff;
+    border-radius: 20px;
+    box-shadow: 0 4px 0 $line;
+
+    .cal-head {
       display: flex;
-      justify-content: space-around;
-      padding: 0 1rem 1.5rem 1rem;
+      align-items: center;
+      justify-content: center;
+      gap: 1rem;
+      padding-bottom: 4px;
     }
-
-    .todoList {
-      padding: $font4*4;
+    .cal-title {
+      font-size: 14px;
+      font-weight: 900;
+      color: $cocoa;
     }
-
-    .list-group-item {
-      border-radius: 0;
+    .cal-nav {
       border: 0;
-      // border-bottom: 1px solid lighten($dark-grey, 50%);
-      padding-right: 0.4rem;
-      padding-left: 0;
-      background: rgba($white, 0);
+      background: $tomato-pale;
+      color: $tomato-deep;
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      font-size: 17px;
+      line-height: 1;
+      cursor: pointer;
+    }
+    .cal-grid {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: 3px;
+      text-align: center;
+    }
+    .dow {
+      font-size: 11px;
+      font-weight: 800;
+      color: $cocoa-soft;
+      padding: 4px 0;
+    }
+    .cal-cell {
+      position: relative;
+      border: 0;
+      background: none;
+      font-size: 13px;
+      font-weight: 800;
+      color: $cocoa;
+      padding: 7px 0 11px;
+      border-radius: 12px;
+      cursor: pointer;
 
-      .form-check {
-        width: 100%;
-        padding: 0;
-
-        &:hover input ~ .checkmark {
-          background-color: darken($orange, 10%);
+      &:hover {
+        background: $tomato-pale;
+      }
+      &.dim {
+        color: $cocoa-soft;
+        opacity: 0.7;
+      }
+      &.today {
+        box-shadow: inset 0 0 0 2px $tomato;
+      }
+      &.sel {
+        background: $tomato;
+        color: #fff;
+        opacity: 1;
+      }
+      .dots {
+        position: absolute;
+        left: 0;
+        right: 0;
+        bottom: 4px;
+        display: flex;
+        justify-content: center;
+      }
+      .dot {
+        width: 5px;
+        height: 5px;
+        border-radius: 50%;
+        background: $butter;
+        &.red {
+          background: $tomato-deep;
         }
-        input:checked ~ .checkmark {
-          background-color: $orange;
-          opacity: 1;
-
-          &:after {
-            display: block;
-          }
-        }
-
-        &-input {
-          display: none;
-          height: 0;
-          width: 0;
-        }
-        &-label {
-          width: 100%;
-          padding-left: $font4 * 7;
-          position: relative;
-
-          .checkmark {
-            position: absolute;
-            top: $font4 - 2px;
-            left: 0;
-            height: $font4 * 5;
-            width: $font4 * 5;
-            background-color: lighten($dark-grey, 20%);
-            border-radius: $font4;
-            opacity: 0.5;
-
-            &:after {
-              content: "";
-              position: absolute;
-              display: none;
-            }
-          }
-
-          &.completed {
-            text-decoration: line-through;
-            color: lighten($dark-grey, 30%);
-            opacity: 1;
-
-            .checkmark {
-              &::after {
-                left: $font4 * 2 - 1px;
-                top: $font4 - 2px;
-                width: $font4 * 2 - 1px;
-                height: $font4 * 3;
-                border: solid $white;
-                border-width: 0 3px 3px 0;
-                //Instead of the line below you could use @include transform($scale, $rotate, $transx, $transy, $skewx, $skewy, $originx, $originy)
-                transform: rotate(45deg);
-                animation: check 0.5s ease-in-out;
-              }
-            }
-          }
+        &.grn {
+          background: $leaf;
         }
       }
-      .btn {
-        opacity: 0.5;
+      &.sel .dot {
+        background: #fff;
+      }
+    }
+  }
 
-        &.active {
-          color: $mango;
+  /* ── 新增任務 ── */
+  .addTask {
+    position: relative;
+    padding: 16px 16px 4px;
+
+    input {
+      width: 100%;
+      height: 48px;
+      border-radius: 24px;
+      border: 2.5px solid $line;
+      background: #fff;
+      padding: 0 128px 0 18px;
+      outline: 0;
+      color: $cocoa;
+      font-size: 15px;
+      font-weight: 700;
+      transition: border-color 0.2s, box-shadow 0.2s;
+
+      &::placeholder {
+        color: #c8b0a4;
+      }
+      &:focus {
+        border-color: $tomato;
+        box-shadow: 0 0 0 4px rgba(255, 107, 91, 0.15);
+      }
+    }
+    .chip-date {
+      position: absolute;
+      right: 64px;
+      top: 16px + 24px;
+      transform: translateY(-50%);
+      background: $tomato-pale;
+      color: $tomato-deep;
+      font-size: 12px;
+      font-weight: 800;
+      border: 0;
+      border-radius: 20px;
+      padding: 5px 10px;
+      cursor: pointer;
+    }
+    .btn--add {
+      position: absolute;
+      right: 20px;
+      top: 16px + 4px;
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      border: 0;
+      background: $tomato;
+      color: #fff;
+      font-size: 26px;
+      font-weight: 900;
+      line-height: 40px;
+      padding: 0;
+      cursor: pointer;
+      box-shadow: 0 3px 0 $tomato-deep;
+      transition: transform 0.25s cubic-bezier(0.3, 1.6, 0.5, 1), background 0.2s;
+
+      &:hover,
+      &:focus-visible {
+        transform: rotate(90deg) scale(1.08);
+        background: #ff7d6e;
+      }
+      &:active {
+        transform: rotate(90deg) scale(0.92);
+        box-shadow: 0 1px 0 $tomato-deep;
+      }
+    }
+    .date-pop {
+      position: absolute;
+      right: 16px;
+      top: calc(100% - 2px);
+      z-index: 40;
+      background: #fff;
+      border-radius: 18px;
+      box-shadow: 0 12px 30px rgba(150, 60, 40, 0.2);
+      padding: 8px;
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      width: 176px;
+      text-align: left;
+
+      button {
+        font-size: 14px;
+        font-weight: 700;
+        text-align: left;
+        border: 0;
+        background: none;
+        color: $cocoa;
+        padding: 7px 12px;
+        border-radius: 12px;
+        cursor: pointer;
+        &:hover {
+          background: $tomato-pale;
+        }
+      }
+      label {
+        font-size: 12px;
+        color: $cocoa-soft;
+        padding: 4px 12px 6px;
+        margin: 0;
+
+        input[type="date"] {
+          display: block;
+          width: 100%;
+          height: auto;
+          font-size: 13px;
+          margin-top: 3px;
+          border: 2px solid $line;
+          border-radius: 10px;
+          padding: 3px 8px;
         }
       }
     }
   }
 
-  .noteArea {
-    font-size: $font4*3;
-    color: lighten($dark-grey, 20%);
+  /* ── 蕃茄鐘模式 ── */
+  .pomodoro {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 16px 0;
+
+    &__length {
+      white-space: nowrap;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      min-height: 36px;
+      border: 0;
+      background: #fff;
+      border-radius: 20px;
+      padding: 4px 6px 4px 12px;
+      box-shadow: inset 0 0 0 2px $line;
+      color: $cocoa-soft;
+      font-size: 13px;
+      font-weight: 800;
+      cursor: pointer;
+      transition: box-shadow 0.2s;
+
+      b {
+        color: $tomato-deep;
+        font-weight: 900;
+      }
+      &:hover {
+        box-shadow: inset 0 0 0 2px $tomato;
+      }
+    }
+    &__edit {
+      margin-left: 4px;
+      background: $tomato;
+      color: #fff;
+      border-radius: 14px;
+      padding: 2px 9px;
+      font-size: 11px;
+    }
+    &__hint {
+      margin-left: auto;
+      white-space: nowrap;
+      font-size: 12px;
+      color: $cocoa-soft;
+
+      .mini-play {
+        display: inline-block;
+        width: 18px;
+        height: 18px;
+        line-height: 18px;
+        border-radius: 50%;
+        background: $tomato;
+        color: #fff;
+        font-size: 8px;
+        text-align: center;
+        vertical-align: 1px;
+      }
+    }
+  }
+
+  /* ── 日子膠囊 ── */
+  .daynav {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 12px 16px 0;
+
+    &__pill {
+      font-size: 13px;
+      font-weight: 800;
+      border: 2px solid $line;
+      background: #fff;
+      color: $cocoa-soft;
+      border-radius: 20px;
+      padding: 3px 14px;
+      cursor: pointer;
+      transition: all 0.2s;
+
+      &.active {
+        background: $leaf;
+        border-color: $leaf;
+        color: #fff;
+        box-shadow: 0 2px 0 $leaf-deep;
+      }
+      &:hover:not(.active) {
+        color: $leaf-deep;
+        border-color: #cdebd3;
+      }
+    }
+    &__today {
+      margin-left: auto;
+      font-size: 12px;
+      font-weight: 800;
+      color: $tomato-deep;
+      border: 0;
+      background: none;
+      padding: 3px 6px;
+      border-radius: 10px;
+      cursor: pointer;
+      &:hover {
+        background: $tomato-pale;
+      }
+    }
+  }
+
+  /* ── 排序列 ── */
+  .sortbar {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 12px 16px 0;
+
+    &__label {
+      font-size: 11px;
+      font-weight: 900;
+      color: $cocoa-soft;
+      letter-spacing: 0.1em;
+      flex: 0 0 auto;
+    }
+    &__chips {
+      display: flex;
+      gap: 4px;
+      overflow-x: auto;
+      scrollbar-width: none;
+      &::-webkit-scrollbar {
+        display: none;
+      }
+    }
+    &__chip {
+      flex: 0 0 auto;
+      font-size: 12px;
+      font-weight: 800;
+      white-space: nowrap;
+      border: 0;
+      background: #fff;
+      color: $cocoa-soft;
+      border-radius: 14px;
+      padding: 4px 9px;
+      cursor: pointer;
+      box-shadow: inset 0 0 0 1.5px $line;
+      transition: all 0.2s;
+
+      &.active {
+        background: $butter;
+        color: $cocoa;
+        box-shadow: inset 0 0 0 1.5px #f5c94a, 0 2px 0 #f5c94a;
+      }
+    }
+  }
+
+  /* ── 每日卡片軌道 ── */
+  .rail {
+    display: flex;
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    scrollbar-width: none;
+    &::-webkit-scrollbar {
+      display: none;
+    }
+  }
+  .day-card {
+    flex: 0 0 100%;
+    min-width: 0;
+    scroll-snap-align: center;
+    min-height: 250px;
+    padding: 0 0 6px;
+
+    &__head {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      margin: 16px 18px 6px;
+    }
+    &__label {
+      font-size: 14px;
+      color: $cocoa;
+      font-weight: 900;
+      margin: 0;
+      text-align: left;
+    }
+    &__stats {
+      font-size: 12px;
+      font-weight: 800;
+      color: $cocoa-soft;
+    }
+    &__empty {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+      padding: 34px 0 28px;
+      color: $cocoa-soft;
+      font-size: 13px;
+      font-weight: 700;
+      p {
+        margin: 0;
+        color: inherit;
+      }
+    }
+    &__tip {
+      font-size: 11px;
+      color: #c8b0a4;
+      margin: 0 0 4px;
+    }
+  }
+
+  /* 進度藤蔓:綠色的條 + 滑動的小蕃茄 */
+  .progress-vine {
+    position: relative;
+    height: 10px;
+    margin: 4px 30px 10px 20px;
+    background: #fff;
+    border-radius: 6px;
+    box-shadow: inset 0 0 0 2px $line;
+
+    &__fill {
+      height: 100%;
+      border-radius: 6px;
+      background: repeating-linear-gradient(-45deg, $leaf 0 8px, #72cc81 8px 16px);
+      transition: width 0.5s cubic-bezier(0.3, 1.3, 0.5, 1);
+    }
+    &__knob {
+      position: absolute;
+      top: 50%;
+      font-size: 18px;
+      line-height: 1;
+      transform: translate(-50%, -55%);
+      transition: left 0.5s cubic-bezier(0.3, 1.3, 0.5, 1);
+    }
+  }
+
+  .overdue-banner {
+    display: block;
+    width: calc(100% - 32px);
+    margin: 4px 16px 0;
+    text-align: left;
+    font-size: 12px;
+    font-weight: 800;
+    color: $tomato-deep;
+    background: $tomato-pale;
+    border: 0;
+    border-radius: 14px;
+    padding: 8px 12px;
+    cursor: pointer;
+  }
+
+  /* ── 任務清單 ── */
+  .todoList {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 8px 14px 10px;
+
+    &.is-dragging {
+      user-select: none;
+      cursor: grabbing;
+    }
+  }
+  .todo-item {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    text-align: left;
+    background: #fff;
+    border-radius: 18px;
+    padding: 10px 8px 10px 10px;
+    box-shadow: 0 3px 0 $line;
+    transition: box-shadow 0.2s, background 0.2s, transform 0.15s;
+
+    &.starred {
+      box-shadow: 0 3px 0 #f6d77a, inset 4px 0 0 $butter;
+    }
+    &.focusing {
+      box-shadow: 0 3px 0 $tomato, inset 0 0 0 2px $tomato;
+    }
+    &.done {
+      background: #fbf4ec;
+      box-shadow: 0 2px 0 $line;
+    }
+    &.dragging {
+      z-index: 5;
+      transform: scale(1.03) rotate(-1deg);
+      box-shadow: 0 12px 26px rgba(150, 60, 40, 0.22);
+    }
+  }
+  .ti-handle {
+    flex: 0 0 auto;
+    display: grid;
+    grid-template-columns: repeat(2, 4px);
+    gap: 3px;
+    padding: 6px 3px;
+    margin-right: -2px;
+    border: 0;
+    background: none;
+    border-radius: 8px;
+    cursor: grab;
+    touch-action: none;
+
+    span {
+      width: 4px;
+      height: 4px;
+      border-radius: 50%;
+      background: #dcc8bc;
+      box-shadow: 7px 0 0 #dcc8bc;
+      grid-column: 1;
+    }
+    &:hover span,
+    &:focus-visible span {
+      background: $tomato;
+      box-shadow: 7px 0 0 $tomato;
+    }
+    &:focus-visible {
+      outline: 2px solid $tomato;
+    }
+  }
+
+  /* 圓形勾選框:勾起來會變成小蕃茄 */
+  .ti-check {
+    flex: 0 0 auto;
+    position: relative;
+    margin: 0;
+    cursor: pointer;
+
+    input {
+      position: absolute;
+      opacity: 0;
+      width: 0;
+      height: 0;
+    }
+    .ti-box {
+      display: block;
+      position: relative;
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      border: 2.5px dashed #f2b3a6;
+      background: #fff;
+      transition: all 0.25s cubic-bezier(0.3, 1.6, 0.5, 1);
+    }
+    &:hover .ti-box {
+      border-color: $tomato;
+      border-style: solid;
+    }
+    input:focus-visible + .ti-box {
+      box-shadow: 0 0 0 3px rgba(255, 107, 91, 0.3);
+    }
+    input:checked + .ti-box {
+      border: 0;
+      background: $tomato;
+      transform: scale(1.08);
+      animation: ti-pop 0.4s cubic-bezier(0.3, 1.6, 0.5, 1);
+
+      // 勾勾
+      &::after {
+        content: "";
+        position: absolute;
+        left: 8.5px;
+        top: 5px;
+        width: 7px;
+        height: 12px;
+        border: solid #fff;
+        border-width: 0 3px 3px 0;
+        transform: rotate(45deg);
+      }
+      // 小葉子
+      &::before {
+        content: "";
+        position: absolute;
+        left: 8px;
+        top: -4px;
+        width: 9px;
+        height: 6px;
+        background: $leaf;
+        border-radius: 60% 0 60% 0;
+      }
+    }
+  }
+  .ti-body {
+    flex: 1;
+    min-width: 0;
+  }
+  .ti-title {
+    display: block;
+    margin: 0;
+    font-size: 15px;
+    font-weight: 800;
+    color: $cocoa;
+    line-height: 1.35;
+    word-break: break-word;
+    cursor: pointer;
+    transition: color 0.2s;
+
+    .done & {
+      color: #c3ada1;
+      text-decoration: line-through;
+      text-decoration-color: $tomato;
+      text-decoration-thickness: 2px;
+    }
+  }
+  .ti-meta {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+    margin-top: 3px;
+    font-size: 12px;
+    font-weight: 700;
+    color: $cocoa-soft;
+
+    .ti-tomato-icon {
+      font-style: normal;
+      &::before {
+        content: "🍅";
+      }
+    }
+    .ti-tomatoes b {
+      font-weight: 900;
+      color: $tomato-deep;
+    }
+    .late {
+      color: #fff;
+      background: $tomato-deep;
+      border-radius: 8px;
+      padding: 0 6px;
+      font-weight: 800;
+    }
+    .btn-move-today {
+      border: 0;
+      background: none;
+      padding: 0 2px;
+      font-size: inherit;
+      font-weight: 800;
+      color: $tomato-deep;
+      cursor: pointer;
+    }
+  }
+  .ti-actions {
+    flex: 0 0 auto;
+    display: flex;
+    align-items: center;
+    gap: 1px;
+  }
+  .ti-btn {
+    width: 30px;
+    height: 30px;
+    padding: 0;
+    border: 0;
+    border-radius: 50%;
+    background: none;
+    color: #d4c1b6;
+    font-size: 13px;
+    line-height: 30px;
+    cursor: pointer;
+    transition: all 0.2s;
+
+    &:hover,
+    &:focus-visible {
+      background: $cream;
+      color: $cocoa;
+    }
+    &.ti-star.active {
+      color: #f5b921;
+      animation: ti-pop 0.4s cubic-bezier(0.3, 1.6, 0.5, 1);
+    }
+    &.ti-play {
+      background: $tomato-pale;
+      color: $tomato-deep;
+      font-size: 11px;
+      margin: 0 2px;
+      &:hover,
+      &:focus-visible,
+      &.running {
+        background: $tomato;
+        color: #fff;
+      }
+    }
+    &.ti-del:hover {
+      color: $tomato-deep;
+    }
+  }
+  .ti-more {
+    display: none;
+  }
+  .done .ti-play {
     opacity: 0.5;
   }
 
-  @keyframes check {
-    0% {
-      height: 0;
-      width: 0;
+  /* ── 底部篩選 ── */
+  .filters {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 6px;
+    padding: 6px 16px 20px;
+
+    &__btn {
+      border: 0;
+      background: #fff;
+      color: $cocoa-soft;
+      font-size: 13px;
+      font-weight: 800;
+      border-radius: 20px;
+      padding: 6px 16px;
+      cursor: pointer;
+      box-shadow: inset 0 0 0 2px $line;
+      transition: all 0.2s;
+
+      &.active {
+        background: $tomato;
+        color: #fff;
+        box-shadow: 0 3px 0 $tomato-deep;
+      }
+      &:hover:not(.active) {
+        color: $tomato-deep;
+      }
     }
-    25% {
-      height: 0;
-      width: $font4 * 2 - 1px;
+    &__sink {
+      border: 0;
+      background: none;
+      color: #c8b0a4;
+      font-size: 12px;
+      font-weight: 800;
+      border-radius: 20px;
+      padding: 6px 10px;
+      cursor: pointer;
+      &.active {
+        background: #dff5e4;
+        color: $leaf-deep;
+      }
     }
-    50% {
-      height: $font4 * 5;
-      width: $font4 * 2 - 1px;
+  }
+
+  /* ── 編輯視窗 ── */
+  .edit-modal {
+    border: 0;
+    border-radius: 26px;
+    background: $cream;
+    font-family: $font-family;
+    overflow: hidden;
+
+    .modal-header {
+      align-items: center;
+      justify-content: flex-start;
+      gap: 8px;
+      border: 0;
+      background: $tomato;
+      color: #fff;
+      padding: 10px 18px;
+      .modal-title {
+        color: #fff;
+        font-weight: 900;
+        font-size: 17px;
+      }
     }
+    .modal-body {
+      text-align: left;
+    }
+    .title {
+      font-size: 12px;
+      font-weight: 900;
+      color: $cocoa-soft;
+      margin-bottom: 4px;
+    }
+    .form-control {
+      border: 2px solid $line;
+      border-radius: 14px;
+      color: $cocoa;
+      font-weight: 700;
+      &:focus {
+        border-color: $tomato;
+        box-shadow: 0 0 0 3px rgba(255, 107, 91, 0.15);
+      }
+    }
+    .edit-date {
+      display: flex;
+      gap: 6px;
+      align-items: center;
+
+      .form-control {
+        flex: 1;
+        min-width: 0;
+      }
+      button {
+        flex: 0 0 auto;
+        border: 0;
+        border-radius: 12px;
+        background: $tomato-pale;
+        color: $tomato-deep;
+        font-size: 12px;
+        font-weight: 800;
+        padding: 7px 9px;
+        cursor: pointer;
+        &:hover {
+          background: $tomato;
+          color: #fff;
+        }
+      }
+    }
+    .comment-list {
+      display: flex;
+      align-items: center;
+      margin-top: 8px;
+      padding: 8px 12px;
+      background: #fff;
+      border-radius: 14px;
+      font-size: 14px;
+      font-weight: 700;
+    }
+    .comment-del {
+      margin-left: auto;
+      border: 0;
+      background: none;
+      color: #d4c1b6;
+      cursor: pointer;
+      &:hover {
+        color: $tomato-deep;
+      }
+    }
+    .created {
+      margin: 12px 0 0;
+      font-size: 11px;
+      color: #c8b0a4;
+    }
+    .modal-footer {
+      border: 0;
+      padding-top: 0;
+    }
+    .btn--delete {
+      border: 0;
+      border-radius: 20px;
+      background: none;
+      color: $tomato-deep;
+      font-weight: 800;
+      padding: 8px 16px;
+      cursor: pointer;
+      &:hover {
+        background: $tomato-pale;
+      }
+    }
+    .btn--save {
+      border: 0;
+      border-radius: 20px;
+      background: $leaf;
+      color: #fff;
+      font-weight: 900;
+      padding: 8px 26px;
+      box-shadow: 0 3px 0 $leaf-deep;
+      cursor: pointer;
+      &:active {
+        transform: translateY(2px);
+        box-shadow: 0 1px 0 $leaf-deep;
+      }
+    }
+  }
+}
+
+@keyframes ti-pop {
+  0% {
+    transform: scale(0.6);
+  }
+  60% {
+    transform: scale(1.25);
+  }
+  100% {
+    transform: scale(1.08);
+  }
+}
+
+/* ── 專注遮罩:奶油色背景 + 大蕃茄倒數 ── */
+.focus-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 2000;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  background: rgba(255, 241, 230, 0.86);
+  -webkit-backdrop-filter: blur(12px);
+  backdrop-filter: blur(12px);
+  color: $cocoa;
+  text-align: center;
+  padding: 2rem 1.5rem;
+  font-family: $font-family;
+
+  .fo-phase {
+    font-size: 15px;
+    font-weight: 900;
+    letter-spacing: 0.12em;
+    color: #fff;
+    background: $tomato;
+    border-radius: 20px;
+    padding: 5px 18px;
+    box-shadow: 0 3px 0 $tomato-deep;
+  }
+  .fo-tomato {
+    position: relative;
+  }
+  .fo-celebrate {
+    position: absolute;
+    top: 6px;
+    right: -10px;
+    font-size: 22px;
+    font-weight: 900;
+    color: $tomato-deep;
+    background: #fff;
+    border-radius: 16px;
+    padding: 4px 12px;
+    box-shadow: 0 6px 16px rgba(150, 60, 40, 0.2);
+  }
+  .fo-task {
+    font-size: 18px;
+    font-weight: 900;
+    max-width: 300px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .fo-basket {
+    font-size: 16px;
+    letter-spacing: 2px;
+    b {
+      font-size: 13px;
+      color: $tomato-deep;
+    }
+  }
+  .fo-paused {
+    font-size: 13px;
+    font-weight: 700;
+    color: $cocoa-soft;
+    visibility: hidden;
+    &.show {
+      visibility: visible;
+    }
+  }
+  .fo-ctrl {
+    display: flex;
+    gap: 22px;
+
+    button {
+      width: 60px;
+      height: 60px;
+      border-radius: 50%;
+      font-size: 20px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: transform 0.15s;
+      &:active {
+        transform: translateY(3px);
+      }
+    }
+  }
+  .fo-toggle {
+    background: $tomato;
+    border: 0;
+    color: #fff;
+    box-shadow: 0 4px 0 $tomato-deep;
+  }
+  .fo-stop {
+    background: #fff;
+    border: 0;
+    color: $cocoa-soft;
+    box-shadow: 0 4px 0 $line, inset 0 0 0 2px $line;
+  }
+  .fo-hint {
+    font-size: 12px;
+    color: $cocoa-soft;
+  }
+
+  &.is-break {
+    background: rgba(232, 248, 236, 0.9);
+    .fo-phase {
+      background: $leaf;
+      box-shadow: 0 3px 0 $leaf-deep;
+    }
+    .fo-toggle {
+      background: $leaf;
+      box-shadow: 0 4px 0 $leaf-deep;
+    }
+  }
+}
+@supports not (backdrop-filter: blur(1px)) {
+  .focus-overlay {
+    background: rgba(255, 241, 230, 0.97);
+  }
+}
+
+/* ── 設定時間面板 ── */
+.duration-sheet {
+  position: fixed;
+  inset: 0;
+  z-index: 1900;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  background: rgba(91, 58, 41, 0.35);
+  -webkit-backdrop-filter: blur(6px);
+  backdrop-filter: blur(6px);
+  font-family: $font-family;
+
+  .ds-panel {
+    width: 100%;
+    max-width: 360px;
+    max-height: calc(100vh - 32px);
+    overflow-y: auto;
+    background: $cream;
+    border-radius: 28px;
+    padding: 16px 20px 18px;
+    box-shadow: 0 20px 50px rgba(120, 50, 30, 0.3);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    color: $cocoa;
+  }
+  .ds-head {
+    align-self: stretch;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .ds-title {
+    margin: 0;
+    font-size: 17px;
+    font-weight: 900;
+    color: $cocoa;
+  }
+  .ds-close {
+    width: 40px;
+    height: 40px;
+    border: 0;
+    border-radius: 50%;
+    background: #fff;
+    color: $cocoa-soft;
+    font-size: 15px;
+    cursor: pointer;
+  }
+  .ds-clock {
+    margin-top: 8px;
+    padding: 12px;
+    border-radius: 50%;
+    background: #fff;
+    box-shadow: 0 6px 0 $line;
+  }
+  .ds-hint {
+    margin: 12px 0 4px;
+    font-size: 12px;
+    color: $cocoa-soft;
+  }
+  .ds-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-top: 10px;
+
+    &--break {
+      margin-top: 14px;
+      padding-top: 14px;
+      border-top: 2px dashed $line;
+    }
+  }
+  .ds-label,
+  .ds-range {
+    width: 40px;
+    font-size: 12px;
+    font-weight: 800;
+    color: $cocoa-soft;
+  }
+  .ds-range {
+    font-size: 11px;
+    font-weight: 700;
+  }
+  .ds-step {
+    width: 44px;
+    height: 44px;
+    border: 0;
+    border-radius: 50%;
+    background: $tomato-pale;
+    color: $tomato-deep;
+    font-size: 22px;
+    font-weight: 900;
+    line-height: 1;
+    cursor: pointer;
+
+    &:disabled {
+      opacity: 0.35;
+      cursor: default;
+    }
+  }
+  .ds-value {
+    width: 76px;
+    text-align: center;
+    font-size: 32px;
+    font-weight: 900;
+    font-variant-numeric: tabular-nums;
+    color: $tomato-deep;
+    line-height: 1;
+
+    small {
+      font-size: 13px;
+      color: $cocoa-soft;
+      padding-left: 3px;
+    }
+    &--break {
+      color: $leaf-deep;
+    }
+  }
+  .ds-presets {
+    display: flex;
+    gap: 6px;
+    margin-top: 10px;
+  }
+  .ds-preset {
+    min-height: 40px;
+    min-width: 58px;
+    border: 0;
+    border-radius: 20px;
+    background: #fff;
+    box-shadow: inset 0 0 0 2px $line;
+    color: $cocoa-soft;
+    font-size: 13px;
+    font-weight: 800;
+    cursor: pointer;
+
+    &.active {
+      background: $tomato;
+      color: #fff;
+      box-shadow: 0 3px 0 $tomato-deep;
+    }
+  }
+  .ds-done {
+    align-self: stretch;
+    margin-top: 18px;
+    height: 48px;
+    border: 0;
+    border-radius: 24px;
+    background: $leaf;
+    color: #fff;
+    font-size: 15px;
+    font-weight: 900;
+    box-shadow: 0 3px 0 $leaf-deep;
+    cursor: pointer;
+  }
+  .ds-note {
+    margin: 10px 0 0;
+    font-size: 11px;
+    color: $cocoa-soft;
   }
 }
