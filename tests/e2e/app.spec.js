@@ -183,3 +183,11 @@ test.describe('organizing tasks', () => {
     expect(item.x + item.width).toBeLessThanOrEqual(card.x + card.width + 1)
   })
 })
+
+test('page metadata: Traditional Chinese lang and current app name in <noscript>', async ({ page }) => {
+  await freshApp(page)
+  await expect(page.locator('html')).toHaveAttribute('lang', 'zh-Hant')
+  const noscript = await page.locator('noscript').innerHTML()
+  expect(noscript).toContain('Daily Tomato Todo')
+  expect(noscript).not.toContain('vue-todolist-1')
+})
